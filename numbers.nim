@@ -76,6 +76,7 @@ when isMainModule:
     block:
         type ZZ5 = ZZ/(5)
         let a = ZZ5 3
+        #let a= 3 + 5*ZZ
         let b = ZZ5 4
         echo a + b
         echo inv a

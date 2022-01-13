@@ -9,7 +9,7 @@ type PolynomialRing2*[TT;V1,V2:static string] = PolynomialRing[PolynomialRing[TT
 type PolynomialRing3*[TT;V1,V2,V3:static string] = PolynomialRing[PolynomialRing2[TT,V1,V2],V3]
 type PolynomialRing4*[TT;V1,V2,V3,V4:static string] = PolynomialRing[PolynomialRing3[TT,V1,V2,V3],V4]
 
-template `$`(T:typedesc[PolynomialRing]):string =
+template `$`*(T:typedesc[PolynomialRing]):string =
   var inner = $T.TT
   if inner.startsWith "PR(":
     inner = inner[3..^2]

@@ -20,8 +20,7 @@ template `+`*[TT](poly:TT, M:static[Ideal[TT]]):FactorRing[M] =
     FactorRing[M.generator](val:poly)
 
 func `+++`*[TT](poly:TT, M:static TT):FactorRing[M] =
-    debugEcho "heree"
-    FactorRing[M](val:poly)
+    result.val = poly
 
 func `+`*[TT; M:static[TT]](f,g:FactorRing[M]):FactorRing[M] =
     result.val = f.val + g.val
@@ -32,7 +31,8 @@ func `$`*[TT; M:static[TT]](f:FactorRing[M]):string =
 when isMainModule:
     type R = PR(ZZ,x)
     static: echo (x^3).coeffs
-    let a = x +++ (x^3)
+    const t = x^3
+    let a = x +++ t
     #let b = x+1 + I(x^3)
     #echo a+b
-    echo I(x^2)
+    echo typeof(I(x^2))
