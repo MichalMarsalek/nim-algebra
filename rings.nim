@@ -1,10 +1,13 @@
 include prelude
-include numbers
+import numbers
 import sugar, macros, math
 {.experimental: "callOperator".}
 
 type PolynomialRing*[TT; V:static string] = object
-    coeffs:seq[TT]
+    coeffs*:seq[TT]
+type PolynomialRing2*[TT;V1,V2:static string] = PolynomialRing[PolynomialRing[TT,V1],V2]
+type PolynomialRing3*[TT;V1,V2,V3:static string] = PolynomialRing[PolynomialRing2[TT,V1,V2],V3]
+type PolynomialRing4*[TT;V1,V2,V3,V4:static string] = PolynomialRing[PolynomialRing3[TT,V1,V2,V3],V4]
 
 template `$`(T:typedesc[PolynomialRing]):string =
   var inner = $T.TT
@@ -14,18 +17,14 @@ template `$`(T:typedesc[PolynomialRing]):string =
 
 type Ring* = Number | PolynomialRing
 
-template emitConverter*(b: string) = 
-  converter scalarToPoly*[TT](c:TT): PolynomialRing[TT,b] {.genSym.} =
-    PolynomialRing[TT,b](coeffs: @[c])
-
 #Type construction macros
-macro PR(ring:typedesc[Ring],variable:untyped{ident}):typedesc[PolynomialRing] =
+macro PR*(ring:typedesc[Ring],variable:untyped{ident}):typedesc[PolynomialRing] =
     let varname = $variable
     result = quote do:
         when not declared(`variable`):
             const `variable` = PolynomialRing[`ring`, `varname`](coeffs: @[`ring`(0), `ring`(1)])
-            #emitConverter(`varname`)
-        PolynomialRing[`ring`, `varname`]
+        type temp = PolynomialRing[`ring`, `varname`]
+        temp
 
 #Lifting macros TODO make it general
 func ConstantPoly*[TT,V](a:TT):PolynomialRing[TT,V] =
@@ -51,7 +50,7 @@ macro liftOp1(op0:string):untyped =
             `op`(f, ConstantPoly[TT,V](g))
         func `op`*[TT,V](f:TT,g:PolynomialRing[TT,V]):PolynomialRing[TT,V] =
             `op`(ConstantPoly[TT,V](f), g)
-    echo toStrLit(result)
+    #echo toStrLit(result)
 macro liftOps1():untyped =
     result = quote do:
         liftOp1 "+"
@@ -160,3 +159,5 @@ when isMainModule:
     echo f(x^2)
     echo f(y)
     echo R
+    
+    

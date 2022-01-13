@@ -1,5 +1,6 @@
 include prelude
-include numbers
+import numbers
+import math
 import sugar, macros, rings
 {.experimental: "callOperator".}
 
@@ -10,7 +11,14 @@ type SmallBinaryField[DEG: static int,
                       MOD: static uint64,
                       V: static string="α"] =
   distinct uint64
-type FiniteField = SmallBinaryField # | GeneralFiniteField
+
+type SmallFiniteField[P: static int,
+                      DEG: static int,
+                      MOD: static array[DEG,int],
+                      V: static string="α"] =
+  distinct array[DEG,int]
+
+type FiniteField = SmallBinaryField | FiniteField
 
 func `+`[DEG,MOD](a,b:SmallBinaryField[DEG,MOD]):SmallBinaryField[DEG,MOD] {.inline.} =
     SmallBinaryField[DEG,MOD] (a.uint64 xor b.uint64)
@@ -36,7 +44,7 @@ func `*`[DEG,MOD](a,b:SmallBinaryField[DEG,MOD]):SmallBinaryField[DEG,MOD] =
 func `*=`[DEG,MOD](a:var SmallBinaryField[DEG,MOD],b:SmallBinaryField[DEG,MOD]) {.inline.} =
     a = a * b
 
-import algos
+include algos
 func `^`[DEG,MOD](a:SmallBinaryField[DEG,MOD],exp:int):SmallBinaryField[DEG,MOD] =
     binaryExponentiation(a, exp)
 
@@ -49,18 +57,64 @@ func `/`[DEG,MOD](a,b:SmallBinaryField[DEG,MOD]):SmallBinaryField[DEG,MOD] {.inl
 func `/=`[DEG,MOD](a:var SmallBinaryField[DEG,MOD],b:SmallBinaryField[DEG,MOD]) {.inline.} =
     a = a / b
 
-func `$`[DEG,MOD](a: SmallBinaryField[DEG,MOD]):string =
-    a.uint64.int.toBin(DEG) #temp use the polynomial repr for general output
+func `$`[DEG,MOD,V](a: SmallBinaryField[DEG,MOD,V]):string =
+    var parts:seq[string]
+    for i in countdown(63,2):
+        if ((a.uint64 shr i) and 1'u64) == 1'u64:
+            parts.add V & "^" & $i
+    if ((a.uint64 shr 1) and 1'u64) == 1'u64:
+        parts.add V
+    if (a.uint64 and 1'u64) == 1'u64:
+        parts.add "1"
+    if parts.len == 0: parts.add "0"
+    parts.join(" + ")
+
+
 
 type Field* = QQ | RR | CC | FiniteField
 
-template GF(characteristic,degree:int,variable="α"):typedesc =
-    assert characteristic == 2
-    assert degree <= 64
-    SmallBinaryField[degree, SMALL_BIN_IRRED_POLYS[degree]]
+func factorPower(c:int):(int,int) =
+    var p,d:int
+    var car = c
+    for q in 2..car:
+        if q*q > car: break
+        if car mod q == 0:
+            p = q
+            while car > 0:
+                car = car div p
+                inc d
+            break
+    return (p,d)
+
+iterator items[DEG,MOD,V](F:typedesc[SmallBinaryField[DEG,MOD,V]]):F =
+    for i in 0..<(1 shl (DEG-1)):
+        yield F i
+
+iterator nonzero[DEG,MOD,V](F:typedesc[SmallBinaryField[DEG,MOD,V]]):F =
+    for i in 1..<(1 shl (DEG-1)):
+        yield F i
+
+macro GF(cardinality:typed,variable="α"):typedesc =  
+    # add injecting generator
+    var base = cardinality
+    var exponent = quote do: 1
+    if cardinality.kind == nnkInfix:
+        var base = cardinality[1]
+        var exponent = cardinality[2]
+    result = quote do:  #replace this with a faster algo          
+        const (p,d) = factorPower `base`
+        when p == 2:
+            SmallBinaryField[d*`exponent`, SMALL_BIN_IRRED_POLYS[d*`exponent`], `variable`]
+        else:
+            #type R = PR(ZZ/(p), x) circular dependency
+            #R/(x^(d*`exponent`))
+            int #placeholder
+    echo toStrLit result
 
 when isMainModule:
-    type F = GF(2,4)
+    type F = GF(16,"x")
     let a:F = F 0b111 #α^2 + α + 1
     let b:F = F 0b1011 #α^3 + α + 1
-    echo a/b
+    echo a
+    for e in GF(2^8,"X"):
+        echo e
