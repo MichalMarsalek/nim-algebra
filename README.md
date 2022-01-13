@@ -6,7 +6,7 @@ The central design decision is that each mathematical structure (ring, field, ve
 
 # Features
 
-## Number rings
+## Number rings & fields
 Types:  
 * `ZZ` - integers
 * `QQ` - rational numbers
