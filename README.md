@@ -4,29 +4,43 @@ Small pure Nim algebra library
 Work in progress. Created in a process of trying to learn more about the Nim type system, macro system and compilation time shenanigans in general.
 The central design decision is that each mathematical structure (ring, field, vector space etc.) has a unique type. This means that it is not possible to say iterate over different finite fields at runtime.
 
+## Embeddings /implicit conversions
+In usual mathematical notation many embeddings are implicit, for example we usualy doesn't distinquish between `1` as an integer, as a complex number of as a constan polynomial over the rationals. In a programming language all of the above are different things (different types) but they must be compatible when using the usual arithmetic operations. For example, when we type
+```nim
+x + 1
+```
+where the left operand is a linear polynomial while the right operand is an integer, the integer must be implicitly understood (embedded) as a constant polynomial in order to make the addition work.
+Since converters are pain (and for other reasons) I have to create my own way of handling these.
+There are essentially 2 cases we need to support
+* T -> S ... both types are an atomic types that (usually) have the set inclusion relation (ZZ->QQ)
+* R[T] -> R[S] ... R is a container types, T, S as in bullet 1 (ZZ^3 -> QQ^3)
+* T -> R[T] ... T is any type and R is a container type (ZZ -> PR(ZZ,x))
+
+All the three cases need to work in combination with each other (it must support chaining).
+
 # Features
 
 ## Number rings & fields
 Types:  
-* `ZZ` - integers
-* `QQ` - rational numbers
-* `RR` - real numbers
-* `CC` - complex numbers
-* `ZZ/(n)` - integers mod n
-* `ZZQ[d]` - quadratic extension of integers
-* `ZZ_i` - Gaussian integers - alias for `ZZQ[-1]`
-* `QQQ[d]` - quadratic extension of rationals
-* `QQ_i` - alias for `QQQ[-1]`
+* [x] `ZZ` - integers
+* [x] `QQ` - rational numbers
+* [x] `RR` - real numbers
+* [x] `CC` - complex numbers
+* [x] `ZZ/(n)` - integers mod n
+* [x] `ZZQ[d]` - quadratic extension of integers
+* [x] `ZZ_i` - Gaussian integers - alias for `ZZQ[-1]`
+* [x] `QQQ[d]` - quadratic extension of rationals
+* [x] `QQ_i` - alias for `QQQ[-1]`
 
 Functions:  
-* Usual arithmetic operations
-* `gcd` - greatest common divisor over `ZZ`
-* `egcd` - Bezout coefficients over `ZZ` using the Extended Euclidean algorithm
-* Modular arithmetic goodies - CRT, Jacobi symbols, euler totient function etc.
-* `random(ZZ/(n))` - random element
-* `items(ZZ/(n))` - iterator over all elements
-* `nonzero(ZZ/(n))` - iterator over all nonzero elements
-* `invertible(ZZ/(n))` - iterator over all invertible elements
+* [x] Usual arithmetic operations
+* [ ] `gcd` - greatest common divisor over `ZZ`
+* [ ] `egcd` - Bezout coefficients over `ZZ` using the Extended Euclidean algorithm
+* [ ] Modular arithmetic goodies - CRT, Jacobi symbols, euler totient function etc.
+* [ ] `random(ZZ/(n))` - random element
+* [ ] `items(ZZ/(n))` - iterator over all elements
+* [ ] `nonzero(ZZ/(n))` - iterator over all nonzero elements
+* [ ] `invertible(ZZ/(n))` - iterator over all invertible elements
 
 Supported embeddings:  
 * `ZZ` -> `QQ` -> `RR` -> `CC`
@@ -38,15 +52,15 @@ Supported embeddings:
 
 ## Finite fields
 Types:  
-* `GF(p^k)` - Galois field of cardinality p^k
+* [x] `GF(p^k)` - Galois field of cardinality p^k
 
 Functions:  
 * Usual arithmetic operations
-* `trace`
-* `norm`
-* `random` - random element
-* `items` - iterator over all elements
-* `nonzero`/`invertible` - iterator over all nonzero elements
+* [ ] `trace`
+* [ ] `norm`
+* [ ] `random` - random element
+* [x] `items` - iterator over all elements
+* [x] `nonzero`/`invertible` - iterator over all nonzero elements
 
 Supported embeddings:  
 `ZZ` -> `GF(p,k)`
@@ -67,20 +81,20 @@ Binary fields of size <= 2^64 have a special opzimized implementation.
 
 ## Polynomial rings
 Types:  
-* `PR(R,x)` - polynomial ring in variable `x` over the base ring `R`
-* `PR(R,x,y,z)` - multivariate polynomials over the base ring `R`
+* [x] `PR(R,x)` - polynomial ring in variable `x` over the base ring `R`
+* [ ] `PR(R,x,y,z)` - multivariate polynomials over the base ring `R`
 
 Functions:  
-* Usual arithmetic operations
-* `deg` - degree
-* `roots`
-* `gcd` - greatest common divisor
-* `egcd` - Bezout coefficients using the Extended Euclidean algorithm
-* `random(d)` - random polynomial with max degree `d` (over finite rings)
-* `items` - iterator over all elements (over finite rings)
-* `nonzero` - iterator over all nonzero elements (over finite rings)
-* `invertible` - iterator over all invertible elements (over finite rings)
-* maybe common poly algos - factoring etc.
+* [x] Usual arithmetic operations
+* [x] `deg` - degree
+* [ ] `roots`
+* [ ] `gcd` - greatest common divisor
+* [ ] `egcd` - Bezout coefficients using the Extended Euclidean algorithm
+* [ ] `random(d)` - random polynomial with max degree `d` (over finite rings)
+* [ ] `items` - iterator over all elements (over finite rings)
+* [ ] `nonzero` - iterator over all nonzero elements (over finite rings)
+* [ ] `invertible` - iterator over all invertible elements (over finite rings)
+* [ ] maybe common poly algos - factoring etc.
 
 Supported embeddings:  
 * `R` -> `PR(R,...)`
@@ -106,12 +120,12 @@ The `roots` function is only available over fields and returns only the roots in
 
 ## Ideals & Factor Rings
 Types:  
-* `Ideal[R]` - a finitely generated ideal in a ring `R`
-* `R/I` - ring `R` factorized by and ideal `I`
-* `random` - random element
-* `items` - iterator over all elements
-* `nonzero` - iterator over all nonzero elements
-* `invertible` - iterator over all invertible elements
+* [x] `Ideal[R]` - a finitely generated ideal in a ring `R`
+* [x] `R/I` - ring `R` factorized by and ideal `I`
+* [ ] `random` - random element
+* [ ] `items` - iterator over all elements
+* [ ] `nonzero` - iterator over all nonzero elements
+* [ ] `invertible` - iterator over all invertible elements
 
 Supported embeddings:  
 * `R` -> `R/I`
@@ -119,35 +133,35 @@ Supported embeddings:
 * `ZZ` -> `PR(R,...)/I` where `R` is in {`QQ`, `RR`, `CC`, `ZZ/(n)`, `GF(p)`}
 
 Functions:  
-* Usual arithmetic operations
-* `I(f)` - principal ideal generated by polynomial `f`
-* `R/(f)` - rings fcatorized by a principal ideal `I(f)`
+* [x] Usual arithmetic operations
+* [x] `I(f)` - principal ideal generated by polynomial `f`
+* [x] `R/(f)` - rings fcatorized by a principal ideal `I(f)`
 
 Notes:  
 Only factors of polynomial rings are supported. Only main ideals are currently supported.
 
 ## Vectors & Matrices
 Types:  
-* `S^n` - column vectors of dimension `n` over the ring `S`
-* `S^(n,m)` matrices of type `n×m` over the ring `S`
-* `AffineSpace[V]` - vector/affine subspace of `V`
+* [x] `S^n` - column vectors of dimension `n` over the ring `S`
+* [x] `S^(n,m)` matrices of type `n×m` over the ring `S`
+* [x] `AffineSpace[V]` - vector/affine subspace of `V`
 
 Functions:
-* Usual arithmetic operations
-* `T` - transposition
-* `det` - determinant
-* `trace` - determinant
-* `diag` - create diagonal matrix or extract a diagonal
-* `\` - left division
-* `A\\b` - solution to Ax = b
-* `b//A` - solution to xA = b
-* `dump` - correctly aligned multiline dump
-* `span` - creates a vector subspace generated by given vectors
-* `AffineSpace[V] + V` - creates affine subspace
-* `random` - random element (over finite rings)
-* `items` - iterator over all elements (over finite rings)
-* `nonzero` - iterator over all nonzero elements (over finite rings)
-* `invertible(R^(n,n))` - iterator over all invertible elements (over finite rings)
+* [x] Usual arithmetic operations
+* [x] `T` - transposition
+* [x] `det` - determinant
+* [x] `trace` - determinant
+* [x] `diag` - create diagonal matrix or extract a diagonal
+* [x] `\` - left division
+* [ ] `A\\b` - solution to Ax = b
+* [ ] `b//A` - solution to xA = b
+* [x] `dump` - correctly aligned multiline dump
+* [x] `span` - creates a vector subspace generated by given vectors
+* [x] `AffineSpace[V] + V` - creates affine subspace
+* [ ] `random` - random element (over finite rings)
+* [ ] `items` - iterator over all elements (over finite rings)
+* [ ] `nonzero` - iterator over all nonzero elements (over finite rings)
+* [ ] `invertible(R^(n,n))` - iterator over all invertible elements (over finite rings)
 
 Examples:  
 ```nim
@@ -165,5 +179,5 @@ dump v.T
 
 ## Some prime stuff, mainly to support the above
 ## Maybe some groups
-Probably mainly finitely generated abelian groups
-Some basic dlog
+* [ ] Probably mainly finitely generated abelian groups  
+* [ ] Some basic dlog
