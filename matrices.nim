@@ -1,6 +1,7 @@
 include prelude
 import numbers
 import sugar, macros
+import math
 #import polynomials
 
 type MatrixSpace[TT; N, M:static int] = object
@@ -167,6 +168,15 @@ func `*`*[TT,N,M](b: TT, a: MatrixSpace[TT,N,M]):MatrixSpace[TT,N,M] =
     result = a
     result *= b
 
+#NORMS
+func norm*[TT,N](a: RowVectorSpace[TT,N] or ColVectorSpace[TT,N],p:static[int]=2): TT =
+    when p==2 and not(TT is RR or TT is CC): assert false
+    when p== -1: return max a.entries
+    when p==0: return min a.entries
+    when p==1: return a.entries.map(abs).sum
+    when p==2: return sqrt(sum a.entries.mapIt(it*it))
+
+
 #RANDOM and ENUMERATION
 func random*[TT,N,M](R:typedesc[MatrixSpace[TT,N,M]]):R =
     for i in 0..<N*M:
@@ -256,6 +266,8 @@ func isRegular*[TT,N,M](a: MatrixSpace[TT,N,M]):bool =
     when N != M: return false
     when N == M:
         return a.rankAtLeast N
+func isRegular*[TT,N,M](a: MatrixSpace[TT,N,M]):bool =
+    a.isInvertible
 
 func inv*[TT,N](a: MatrixSpace[TT,N,N]):MatrixSpace[TT,N,N] =
     discard #TODO
@@ -295,3 +307,4 @@ when isMainModule:
     dump det m22
     
     dump rank m22.rowEchelon
+    dump norm (RR^2) [3.0, 4.0]

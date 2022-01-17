@@ -174,6 +174,6 @@ when isMainModule:
     echo f(x^2)
     echo f(y)
     echo R
-    dump roots(x^3 - 7*x + 6)
+    dump roots(x^5 - 7*x^3 + 6*x^2)
     
     
