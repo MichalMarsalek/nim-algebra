@@ -4,6 +4,26 @@ Small pure Nim algebra library
 Work in progress. Created in a process of trying to learn more about the Nim type system, macro system and compilation time shenanigans in general.
 The central design decision is that each mathematical structure (ring, field, vector space etc.) has a unique type. This means that it is not possible to say iterate over different finite fields at runtime.
 
+# Features
+
+This package implements various common algebraic structures, namely:  
+* Number rings and fields
+* Finite fields
+* Polynomial rings
+* Matrices and linear algebra
+
+The following is available for all rings `R` and all `a,b` in `R`, `k` in `ZZ`:  
+* `card R` - cardinality of the ring. Raises InfiniteCardinalityError for infinite rings,
+* `items R` - iterates over all elements of the ring,
+* `nonzero R` - iterates over all nonzero elements of the ring,
+* `invertible R` - iterates over all invertible elements of the ring,
+* `random R` - returns a random element. Raises InfiniteCardinalityError for infinite rings,
+* `zero R` - returns a zero of the ring,
+* `one R` - returns a one of the ring,
+* `isInvertible a` - indicates whether `a` is invertible,
+* `a.inv` - returns an inverse of a. Raises ElementNotInvertibleError for noninvertible elements,
+* `-a, a+b, a-b, a\*b, a/b, a^k` - common arithmetic operations
+
 ## Embeddings /implicit conversions
 In usual mathematical notation many embeddings are implicit, for example we usualy doesn't distinquish between `1` as an integer, as a complex number of as a constan polynomial over the rationals. In a programming language all of the above are different things (different types) but they must be compatible when using the usual arithmetic operations. For example, when we type
 ```nim
@@ -17,8 +37,6 @@ There are essentially 2 cases we need to support
 * T -> R[T] ... T is any type and R is a container type (ZZ -> PR(ZZ,x))
 
 All the three cases need to work in combination with each other (it must support chaining).
-
-# Features
 
 ## Number rings & fields
 Types:  
@@ -34,16 +52,18 @@ Types:
 
 Functions:  
 * [x] Usual arithmetic operations
-* [ ] `gcd` - greatest common divisor over `ZZ`
+* [x] `gcd` - greatest common divisor over `ZZ`
 * [ ] `egcd` - Bezout coefficients over `ZZ` using the Extended Euclidean algorithm
 * [ ] Modular arithmetic goodies - CRT, Jacobi symbols, euler totient function etc.
-* [ ] `random(ZZ/(n))` - random element
-* [ ] `items(ZZ/(n))` - iterator over all elements
-* [ ] `nonzero(ZZ/(n))` - iterator over all nonzero elements
-* [ ] `invertible(ZZ/(n))` - iterator over all invertible elements
+* [x] `random(ZZ/(n))` - random element
+* [x] `divisors(a:ZZ)` - iterator over all positive divisors
+* [x] `positive(ZZ)` - iterator over all positive elements
+* [x] `items(ZZ/(n))` - iterator over all elements
+* [x] `nonzero(ZZ/(n))` - iterator over all nonzero elements
+* [x] `invertible(ZZ/(n))` - iterator over all invertible elements
 
 Supported embeddings:  
-* `ZZ` -> `QQ` -> `RR` -> `CC`
+* `int` -> `ZZ` -> `QQ` -> `RR` -> `CC`
 * `QQQ[d]` -> `CC`
 * `ZZZ[d]` -> `CC`
 * `ZZ` -> `ZZ/(n)`
@@ -116,7 +136,7 @@ Notes:
 Multivariate polynomials are internally represented as polynomials in the last variable with coefficents being polynomials in the rest of the variables.
 This means that `PR(PR(QQ,x),y)` is the same as `PR(QQ,x,y)`.
 The order of variables matter. `PR(QQ,x,y)` is not compatible with `PR(QQ,y,x)`.  
-The `roots` function is only available over fields and returns only the roots in the field. If you wish to find all the roots, search in an extension.
+The `roots` returns only the roots in the field/ring. If you wish to find all the roots, search in an extension.
 
 ## Ideals & Factor Rings
 Types:  
@@ -149,6 +169,10 @@ Types:
 Functions:
 * [x] Usual arithmetic operations
 * [x] `T` - transposition
+* [x] `A[i,j]` - indexing
+* [ ] `v.norm(p=2)` - norm of a vector - p can be in {0,1,2,-1} where -1 indicates the oo-norm. 2-norm is only available over the reals
+* [ ] `v.norm2` - norm of a real vector squared
+* [ ] `todo` - matrix norms
 * [x] `det` - determinant
 * [x] `trace` - determinant
 * [x] `diag` - create diagonal matrix or extract a diagonal

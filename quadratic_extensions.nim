@@ -23,30 +23,27 @@ func `$`*[D:static ZZ](a:ZZQ[D]):string =
         else:
             return replace($a.x & " + " & $a.y & "√(" & $D & ")", "+ -", "- ")
 
-#macro sqrt*(a:untyped{lit}):untyped = #TODO temporary
-#    quote do:
-#        (x:zero(typeof(`a`)), y:`a`)
 func sqrt*(a:static ZZ):ZZQ[a] =
     result.x = zero(ZZ)
     result.y = one(ZZ)
 
-func `+`*[D:static ZZ](a,b:ZZQ[D]):ZZQ[D] =
+func `+`*[D](a,b:ZZQ[D]):ZZQ[D] =
     result.x = a.x + b.x
     result.y = a.y + b.y
-func `+=`*[D:static ZZ](a: var ZZQ[D], b: ZZQ[D]) =
+func `+=`*[D](a: var ZZQ[D], b: ZZQ[D]) =
     a = a + b
-func `-`*[D:static ZZ](a,b:ZZQ[D]):ZZQ[D] =
+func `-`*[D](a,b:ZZQ[D]):ZZQ[D] =
     result.x = a.x - b.x
     result.y = a.y - b.y
-func `-=`*[D:static ZZ](a: var ZZQ[D], b: ZZQ[D]) =
+func `-=`*[D](a: var ZZQ[D], b: ZZQ[D]) =
     a = a - b
-func `-`*[D:static ZZ](a:ZZQ[D]):ZZQ[D] =
+func `-`*[D](a:ZZQ[D]):ZZQ[D] =
     result.x = -a.x
     result.y = -a.y
-func `*`*[D:static ZZ](a,b:ZZQ[D]):ZZQ[D] =
+func `*`*[D](a,b:ZZQ[D]):ZZQ[D] =
     result.x = a.x * b.x + D * a.y * b.y
     result.y = a.y * b.x + a.x * b.y
-func `*=`*[D:static ZZ](a: var ZZQ[D], b: ZZQ[D]) =
+func `*=`*[D](a: var ZZQ[D], b: ZZQ[D]) =
     a = a * b
     
 

@@ -123,7 +123,7 @@ func sum*[TT,N,M](a: MatrixSpace[TT,N,N]): TT =
 func trace*[TT,N,M](a: MatrixSpace[TT,N,N]): TT =
     sum a.diag.entries
 
-func rowEchelon[TT,N,M](a: MatrixSpace[TT,N,M]):MatrixSpace[TT,N,M]
+func rowEchelon*[TT,N,M](a: MatrixSpace[TT,N,M]):MatrixSpace[TT,N,M]
 func det*[TT,N](a: MatrixSpace[TT,N,N]): TT =
     let ech = rowEchelon a #temporary TODO don't use division for det calc
     result = ech[0,0]
@@ -167,6 +167,20 @@ func `*`*[TT,N,M](b: TT, a: MatrixSpace[TT,N,M]):MatrixSpace[TT,N,M] =
     result = a
     result *= b
 
+#RANDOM and ENUMERATION
+func random*[TT,N,M](R:typedesc[MatrixSpace[TT,N,M]]):R =
+    for i in 0..<N*M:
+        result.entries[i] = R.random
+
+iterator items*[TT,N,M](R:typedesc[MatrixSpace[TT,N,M]]):R =
+    discard
+iterator nonzero*[TT,N,M](R:typedesc[MatrixSpace[TT,N,M]]):R =
+    discard
+iterator invertible*[TT,N,M](R:typedesc[MatrixSpace[TT,N,M]]):R =
+    for A in R.nonzero:
+        if A.isRegular:
+            yield A
+
 #SUBSPACE OPERATIONS
 
 func span*[V](a: varargs[V]):AffineSpace[V] =
@@ -176,7 +190,7 @@ func `+`[V](a:AffineSpace[V], b:V):AffineSpace[V] =
     result.translation += b
 
 #INVERTING & SOLVING
-func rowEchelon[TT,N,M](a: MatrixSpace[TT,N,M]):MatrixSpace[TT,N,M] =
+func rowEchelon*[TT,N,M](a: MatrixSpace[TT,N,M]):MatrixSpace[TT,N,M] =
     result = a
     for m in 0..<M:
         var nonzeroRow = m
@@ -193,7 +207,56 @@ func rowEchelon[TT,N,M](a: MatrixSpace[TT,N,M]):MatrixSpace[TT,N,M] =
             let coeff = -result[i,m]/result[m,m]
             for j in m..<M:
                 result[i,j] = result[i,j] + coeff * result[m,j]
-    
+
+func rankAtLeast*[TT,N,M](a: MatrixSpace[TT,N,M], bound:int):bool =
+    var a = a
+    var hope = static: min(N,M)
+    var pass = 0
+    for m in 0..<M:
+        var nonzeroRow = m
+        while a[nonzeroRow,m] == zero(TT) and nonzeroRow < N:
+            inc nonzeroRow
+        if nonzeroRow >= M:
+            dec hope
+            if hope < bound: return false
+            continue
+        inc pass
+        if pass >= bound: return true
+        if nonzeroRow > m:
+            for j in m..<M:
+                let temp = a[nonzeroRow,j]
+                a[nonzeroRow,j] = a[m,j]
+                a[m,j] = temp
+        for i in m+1..<N:
+            let coeff = -a[i,m]/a[m,m]
+            for j in m..<M:
+                a[i,j] = a[i,j] + coeff * a[m,j]
+    return true
+
+func rank*[TT,N,M](a: MatrixSpace[TT,N,M]):int =
+    var a = a
+    for m in 0..<M:
+        var nonzeroRow = m
+        while a[nonzeroRow,m] == zero(TT) and nonzeroRow < N:
+            inc nonzeroRow
+        if nonzeroRow >= M:
+            continue
+        inc result
+        if nonzeroRow > m:
+            for j in m..<M:
+                let temp = a[nonzeroRow,j]
+                a[nonzeroRow,j] = a[m,j]
+                a[m,j] = temp
+        for i in m+1..<N:
+            let coeff = -a[i,m]/a[m,m]
+            for j in m..<M:
+                a[i,j] = a[i,j] + coeff * a[m,j]
+
+func isRegular*[TT,N,M](a: MatrixSpace[TT,N,M]):bool =
+    when N != M: return false
+    when N == M:
+        return a.rankAtLeast N
+
 func inv*[TT,N](a: MatrixSpace[TT,N,N]):MatrixSpace[TT,N,N] =
     discard #TODO
 
@@ -202,8 +265,6 @@ func `/`*[TT,N,M,K](a: MatrixSpace[TT,N,M],b: MatrixSpace[TT,M,K]):MatrixSpace[T
 func `\`*[TT,N,M,K](a: MatrixSpace[TT,N,M],b: MatrixSpace[TT,M,K]):MatrixSpace[TT,N,K] =
     a.inv * b
 
-func rank*[TT,N,M](a: MatrixSpace[TT,N,M]):int =
-    discard #TODO
 func ker*[TT,N,M](a: MatrixSpace[TT,N,M]):AffineSpace[RowVectorSpace[TT,M]] =
     discard #TODO
 
@@ -232,3 +293,5 @@ when isMainModule:
     let m22:QQ^(2,2) = [[1//1,2//1],[1//1,1//1]]
     dump m22
     dump det m22
+    
+    dump rank m22.rowEchelon

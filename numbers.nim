@@ -1,4 +1,6 @@
 include rationals, complex
+import sugar
+import random, algorithm
 
 type ZZ* = int     #this is only temporary
 type RR* = float   #this is only temporary
@@ -20,6 +22,32 @@ template one*(_:typedesc[CC]):CC = Complex(1.0,0.0)
 template zero*(_:typedesc[QQ]):QQ = 0//1
 template one*(_:typedesc[QQ]):QQ = 1//1
 
+# ZZ
+func gcd(x,y:ZZ):ZZ =
+    #TODO implement binary version
+    var x = abs x
+    var y = abs y
+    while y > 0:
+        (x, y) = (y, x mod y)
+    x
+
+iterator positive*(_:typedesc[ZZ]):ZZ =
+    for i in 1..<int.high:
+        yield ZZ i
+
+iterator divisors*(a:ZZ):ZZ =
+    var rest:seq[ZZ]
+    for i in 1..a:
+        let i_squared = i*i
+        if i_squared == a: yield ZZ i
+        if i_squared >= a: break
+        yield ZZ i
+        rest.add ZZ (a div ZZ(i))
+    for x in rest.reversed:
+        yield x
+            
+
+# ZZ/(n)
 template zero*[M](R:typedesc[ZZMod[M]]):R =
     R 0
 template one*[M](R:typedesc[ZZMod[M]]):R =
@@ -72,6 +100,22 @@ func `/`*[M](a,b: ZZMod[M]):ZZMod[M] {.inline.} =
 func `/=`*[M](a: var ZZMod[M], b: ZZMod[M]) {.inline.} =
     a = a * b.inv
 
+func random*[M](R:typedesc[ZZMod[M]]):R =
+    const mx = M-1
+    R rand(mx)
+
+iterator items*[M](R:typedesc[ZZMod[M]]):R =
+    for i in 0..<M:
+        yield R i
+iterator nonzero*[M](R:typedesc[ZZMod[M]]):R =
+    for i in 1..<M:
+        yield R i
+iterator invertible*[M](R:typedesc[ZZMod[M]]):R =
+    for i in 1..<M:
+        if gcd(M,i) == 1:
+            yield R i
+
+
 when isMainModule: 
     block:
         type ZZ5 = ZZ/(5)
@@ -82,3 +126,8 @@ when isMainModule:
         echo inv a
         echo a^ -1
         echo ZZ5(4)^1001
+        dump gcd(6,21)
+        for i in invertible ZZ/12:
+            echo i
+        for i in 24.divisors:
+            echo i

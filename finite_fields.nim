@@ -75,11 +75,44 @@ func `$`[DEG,MOD,V](a: BinaryField[DEG,MOD,V]):string =
         parts.add "1"
     if parts.len == 0: parts.add "0"
     parts.join(" + ")
+    
+#Temporary - replace with embeddings:
+func `+`[DEG,MOD, V](a:BinaryField[DEG,MOD, V], b:int):BinaryField[DEG,MOD, V] {.inline.} =
+    a + BinaryField[DEG,MOD, V]b
 
 #GENERAL FIELD
 template zero*(R:typedesc[GenFiniteField]):R = discard
 template one*(R:typedesc[GenFiniteField]):R = result.coeffs[0] = 1
 template gen*(R:typedesc[GenFiniteField]):R = result.coeffs[1] = 1
+
+
+func random[P,DEG,MOD,V](R:typedesc[GenFiniteField[P,DEG,MOD,V]]):R =
+    for i in 0..<DEG:
+        result.coeffs = random(ZZ/P)
+
+func next[P,DEG,MOD, V](a: GenFiniteField[P,DEG,MOD, V]):GenFiniteField[P,DEG,MOD, V] =
+    result = a
+    result.coeffs[0] += 1
+    var i = 0
+    while result.coeffs[i] == P:
+        result.coeffs[i] = 0
+        inc i
+        result.coeffs[i] += 1
+
+iterator items[M](R:typedesc[ZZMod[M]]):R =
+    var el = zero(R)
+    for i in 1..R.card:
+        yield el
+        el = next el
+iterator nonzero[M](R:typedesc[ZZMod[M]]):R =
+    var el = one(R)
+    for i in 1..<R.card:
+        yield el
+        el = next el
+iterator invertible[M](R:typedesc[ZZMod[M]]):R =
+    for e in R.nonzero:
+        yield e
+
 discard """
 func `+=`[P,DEG,MOD, V](a:var GenFiniteField[P,DEG,MOD, V],b:GenFiniteField[P,DEG,MOD, V]) {.inline.} =
     for i in 0..<DEG:

@@ -148,6 +148,21 @@ func `()`*[TT,V,TT2](f:PolynomialRing[TT,V], val: TT2):TT2 =
 #func `()`*[TT,V1,V2](f:PolynomialRing[TT,V1], val: PolynomialRing[TT,V2]):PolynomialRing[TT,V2] =
 #    for i in countdown(deg f, 0):
 #        result = result * val + f.coeffs[i]
+
+func roots*[V](f:PolynomialRing[ZZ,V]):seq[ZZ] =
+    if f.coeffs[deg f] == one(ZZ):
+        if f.coeffs[0] == zero(ZZ):
+            result.add zero(ZZ)
+        var ci = 0
+        while ci <= deg(f) and f.coeffs[ci] == zero(ZZ):
+            inc ci
+        for d in f.coeffs[ci].divisors:
+            if f(d) == zero(ZZ):
+                result.add d
+            if f(-d) == zero(ZZ):
+                result.add -d
+    
+
 when isMainModule:
     echo int.zero
     type R = PR(ZZ,x)
@@ -159,5 +174,6 @@ when isMainModule:
     echo f(x^2)
     echo f(y)
     echo R
+    dump roots(x^3 - 7*x + 6)
     
     
