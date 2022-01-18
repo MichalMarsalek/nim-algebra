@@ -86,11 +86,11 @@ template one*(R:typedesc[GenFiniteField]):R = result.coeffs[0] = 1
 template gen*(R:typedesc[GenFiniteField]):R = result.coeffs[1] = 1
 
 
-func random[P,DEG,MOD,V](R:typedesc[GenFiniteField[P,DEG,MOD,V]]):R =
+func random*[P,DEG,MOD,V](R:typedesc[GenFiniteField[P,DEG,MOD,V]]):R =
     for i in 0..<DEG:
         result.coeffs = random(ZZ/P)
 
-func next[P,DEG,MOD, V](a: GenFiniteField[P,DEG,MOD, V]):GenFiniteField[P,DEG,MOD, V] =
+func next*[P,DEG,MOD, V](a: GenFiniteField[P,DEG,MOD, V]):GenFiniteField[P,DEG,MOD, V] =
     result = a
     result.coeffs[0] += 1
     var i = 0
@@ -99,17 +99,17 @@ func next[P,DEG,MOD, V](a: GenFiniteField[P,DEG,MOD, V]):GenFiniteField[P,DEG,MO
         inc i
         result.coeffs[i] += 1
 
-iterator items[M](R:typedesc[ZZMod[M]]):R =
+iterator items*[P,DEG,MOD, V](R:typedesc[GenFiniteField[P,DEG,MOD,V]]):R =
     var el = zero(R)
     for i in 1..R.card:
         yield el
         el = next el
-iterator nonzero[M](R:typedesc[ZZMod[M]]):R =
+iterator nonzero*[P,DEG,MOD, V](R:typedesc[GenFiniteField[P,DEG,MOD,V]]):R =
     var el = one(R)
     for i in 1..<R.card:
         yield el
         el = next el
-iterator invertible[M](R:typedesc[ZZMod[M]]):R =
+iterator invertible*[P,DEG,MOD, V](R:typedesc[GenFiniteField[P,DEG,MOD,V]]):R =
     for e in R.nonzero:
         yield e
 

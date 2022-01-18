@@ -15,11 +15,18 @@ type AffineSpace[V] = object
     empty: bool
 
 #INDEXING
-func `[]=`[TT;N,M:static int](a: var MatrixSpace[TT,N,M],n,m:int,val:TT) =
+func `[]=`*[TT;N,M:static int](a: var MatrixSpace[TT,N,M],n,m:int,val:TT) =
   a.entries[n+m*N] = val
 
-func `[]`[TT;N,M:static int](a:MatrixSpace[TT,N,M],n,m:int):TT =
+func `[]`*[TT;N,M:static int](a:MatrixSpace[TT,N,M],n,m:int):TT =
   a.entries[n+m*N]
+
+func rows*[TT;N,M:static int](a: var MatrixSpace[TT,N,M],n:int):RowVectorSpace[TT,M] =
+  for m in 0..<M:
+    result.entries[m] = a.entries[n+m*N]
+func cols*[TT;N,M:static int](a: var MatrixSpace[TT,N,M],n:int):ColVectorSpace[TT,N] =
+  for n in 0..<N:
+    result.entries[n] = a.entries[n+m*N]
 
 #PRINTING
 func toString[TT;N,M:static int](a:MatrixSpace[TT,N,M], line1Offset = 0): string =
@@ -187,7 +194,7 @@ iterator items*[TT,N,M](R:typedesc[MatrixSpace[TT,N,M]]):R =
 iterator nonzero*[TT,N,M](R:typedesc[MatrixSpace[TT,N,M]]):R =
     discard
 iterator invertible*[TT,N,M](R:typedesc[MatrixSpace[TT,N,M]]):R =
-    for A in R.nonzero:
+    for A in R.nonzero: ##make this generator more efficient using rankAtLeast
         if A.isRegular:
             yield A
 

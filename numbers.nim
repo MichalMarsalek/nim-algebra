@@ -36,6 +36,7 @@ iterator positive*(_:typedesc[ZZ]):ZZ =
         yield ZZ i
 
 iterator divisors*(a:ZZ):ZZ =
+    var a = abs a
     var rest:seq[ZZ]
     for i in 1..a:
         let i_squared = i*i

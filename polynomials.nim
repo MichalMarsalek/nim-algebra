@@ -22,7 +22,7 @@ macro PR*(ring:typedesc[Ring],variable:untyped{ident}):typedesc[PolynomialRing] 
     let varname = $variable
     result = quote do:
         when not declared(`variable`):
-            const `variable` = PolynomialRing[`ring`, `varname`](coeffs: @[`ring`(0), `ring`(1)])
+            const `variable` = PolynomialRing[`ring`, `varname`](coeffs: @[zero `ring`, one `ring`])
         type temp = PolynomialRing[`ring`, `varname`]
         temp
 
@@ -30,12 +30,8 @@ macro PR*(ring:typedesc[Ring],variable:untyped{ident}):typedesc[PolynomialRing] 
 func ConstantPoly*[TT,V](a:TT):PolynomialRing[TT,V] =
     PolynomialRing[TT, V](coeffs: @[a])
 
-
-template zero*(R:typedesc[Number]):R = R(0)
-template one*(R:typedesc[Number]):R = R(1)
-
 template zero*[TT;V:static string](R:typedesc[PolynomialRing[TT, V]]):R =
-    discard
+    PolynomialRing[TT, V](coeffs: @[zero(typeof TT)])
 template one*[TT; V:static string](R:typedesc[PolynomialRing[TT, V]]):R =
     PolynomialRing[TT, V](coeffs: @[one(typeof TT)])
 
@@ -67,7 +63,7 @@ iterator pairs*[TT,V](f: PolynomialRing[TT,V]): (int,TT) =
 func `$`*[TT; V:static string](f:PolynomialRing[TT, V]): string =
     var parts: seq[string]
     for e,c in f:
-        if c == TT(0): continue
+        if c == zero TT: continue
         if e == 0:
             parts.add($c)
         else:
@@ -89,7 +85,7 @@ func rename[TT,V1](f:PolynomialRing[TT,V1], V2: static string):PolynomialRing[TT
 
 func normalize[TT,V](f: var PolynomialRing[TT,V]) =
     var i = deg(f)
-    while f.coeffs[i] == 0:
+    while f.coeffs[i] == zero TT:
         dec i
     f.coeffs.setlen(i+1)
 
@@ -124,7 +120,7 @@ func `-`*[TT,V](f:PolynomialRing[TT,V]):PolynomialRing[TT,V] =
         f.coeffs[i] = -f.coeffs[i]
 
 func `*`*[TT,V](f,g:PolynomialRing[TT,V]):PolynomialRing[TT,V] =
-    result.coeffs = newSeq[TT](deg(f)+deg(g)+1)
+    result.coeffs = newSeqWith(deg(f)+deg(g)+1, zero(TT))
     for i,fi in f:
         for j,gj in g:
             result.coeffs[i+j] += fi*gj
@@ -142,6 +138,7 @@ func `()`*[TT,V1](f:PolynomialRing[TT,V1], V2: static string):PolynomialRing[TT,
     PolynomialRing[TT,V2](f)
 
 func `()`*[TT,V,TT2](f:PolynomialRing[TT,V], val: TT2):TT2 =
+    result = zero(TT2)
     for i in countdown(deg f, 0):
         result = result * val + f.coeffs[i]
 
@@ -156,17 +153,37 @@ func roots*[V](f:PolynomialRing[ZZ,V]):seq[ZZ] =
         var ci = 0
         while ci <= deg(f) and f.coeffs[ci] == zero(ZZ):
             inc ci
-        for d in f.coeffs[ci].divisors:
-            if f(d) == zero(ZZ):
-                result.add d
-            if f(-d) == zero(ZZ):
-                result.add -d
+        for p in f.coeffs[ci].divisors:
+            if f(p) == zero(ZZ):
+                result.add p
+            if f(-p) == zero(ZZ):
+                result.add -p
+
+func equalentZZPoly*[V](f:PolynomialRing[QQ,V]):PolynomialRing[QQ,V] =
+    let L = lcm(f.coeffs.mapIt(it.den))
+    result.coeffs = f.coeffs.mapIt(it * L)
+
+func roots*[V](f:PolynomialRing[QQ,V]):seq[QQ] =
+    var f = f.equalentZZPoly
+    if f.coeffs[0] == zero(QQ):
+        result.add zero(QQ)
+    var ci = 0
+    while ci <= deg(f) and f.coeffs[ci] == zero(QQ):
+        inc ci
+    for p in f.coeffs[ci].num.divisors:
+        for q in f.coeffs[deg f].num.divisors:
+            let x = p//q
+            if f(x) == zero(QQ):
+                result.add x
+            if f(-x) == zero(QQ):
+                result.add -x
     
 
 when isMainModule:
     echo int.zero
     type R = PR(ZZ,x)
     type S = PR(ZZ,y)
+    type S2 = PR(QQ,q)
     let f = 1 + x^2 + x
     echo f
     echo f("w")
@@ -175,5 +192,6 @@ when isMainModule:
     echo f(y)
     echo R
     dump roots(x^5 - 7*x^3 + 6*x^2)
+    dump roots(3//1*q^3 - 5//1*q^2 + 5//1* q - 2//1)
     
     
