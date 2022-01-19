@@ -1,6 +1,7 @@
 include prelude
 import numbers
 import sugar, macros
+import algos
 import math
 #import polynomials
 
@@ -84,7 +85,7 @@ func embed*[M](a: auto):M =
         result[n,n] = a
 
 func zero*[TT,N,M](R:typedesc[MatrixSpace[TT,N,M]]):R =
-    discard
+    embed[R](zero(typeof(TT)))
 func one*[TT,N](R:typedesc[MatrixSpace[TT,N,N]]):R =
     embed[R](one(typeof(TT)))
     
@@ -122,7 +123,6 @@ func `*`*[TT,N,M,K](a: MatrixSpace[TT,N,M],b: MatrixSpace[TT,M,K]):MatrixSpace[T
 func `*=`*[TT,N,M,K](a: var MatrixSpace[TT,N,M], b: MatrixSpace[TT,M,K]) =
     a = a*b
 
-include algos
 func `^`*[TT,N](a: MatrixSpace[TT,N,N], exp:int):MatrixSpace[TT,N,N] =
     a.binaryExponentiation exp  
 

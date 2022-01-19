@@ -1,8 +1,8 @@
-include rationals, complex
+include rationals, complex, integers
 import sugar
+import algos
 import random, algorithm
 
-type ZZ* = int     #this is only temporary
 type RR* = float   #this is only temporary
 type CC* = Complex[float] #this is only temporary
 type QQ* = Rational[ZZ]
@@ -13,40 +13,12 @@ type ZZMod*[M: static ZZ] = distinct ZZ
 template `/`*(T:typedesc[ZZ],m:int):typedesc =
     ZZMod[m]
 
-template zero*(_:typedesc[ZZ]):ZZ = 0
-template one*(_:typedesc[ZZ]):ZZ = 1
 template zero*(_:typedesc[RR]):RR = 0.0
 template one*(_:typedesc[RR]):RR = 1.0
 template zero*(_:typedesc[CC]):CC = Complex(0.0,0.0)
 template one*(_:typedesc[CC]):CC = Complex(1.0,0.0)
 template zero*(_:typedesc[QQ]):QQ = 0//1
-template one*(_:typedesc[QQ]):QQ = 1//1
-
-# ZZ
-func gcd(x,y:ZZ):ZZ =
-    #TODO implement binary version
-    var x = abs x
-    var y = abs y
-    while y > 0:
-        (x, y) = (y, x mod y)
-    x
-
-iterator positive*(_:typedesc[ZZ]):ZZ =
-    for i in 1..<int.high:
-        yield ZZ i
-
-iterator divisors*(a:ZZ):ZZ =
-    var a = abs a
-    var rest:seq[ZZ]
-    for i in 1..a:
-        let i_squared = i*i
-        if i_squared == a: yield ZZ i
-        if i_squared >= a: break
-        yield ZZ i
-        rest.add ZZ (a div ZZ(i))
-    for x in rest.reversed:
-        yield x
-            
+template one*(_:typedesc[QQ]):QQ = 1//1            
 
 # ZZ/(n)
 template zero*[M](R:typedesc[ZZMod[M]]):R =
@@ -132,3 +104,4 @@ when isMainModule:
             echo i
         for i in 24.divisors:
             echo i
+        echo factor -750

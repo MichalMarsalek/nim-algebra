@@ -2,6 +2,7 @@ include prelude
 import numbers
 import math
 import sugar, macros
+import algos
 {.experimental: "callOperator".}
 
 #Conway polynomials:
@@ -51,7 +52,6 @@ func `*`[DEG,MOD, V](a,b:BinaryField[DEG,MOD, V]):BinaryField[DEG,MOD, V] =
 func `*=`[DEG,MOD, V](a:var BinaryField[DEG,MOD, V],b:BinaryField[DEG,MOD, V]) {.inline.} =
     a = a * b
 
-include algos
 func `^`[DEG,MOD, V](a:BinaryField[DEG,MOD, V],exp:int):BinaryField[DEG,MOD, V] =
     binaryExponentiation(a, exp)
 

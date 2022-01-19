@@ -1,6 +1,7 @@
 include prelude
 import numbers
 import sugar, macros, math
+import algos, factorisations
 {.experimental: "callOperator".}
 
 type PolynomialRing*[TT; V:static string] = object
@@ -116,8 +117,8 @@ func `-`*[TT,V](f,g:PolynomialRing[TT,V]):PolynomialRing[TT,V] =
     result = f
     result -= g
 func `-`*[TT,V](f:PolynomialRing[TT,V]):PolynomialRing[TT,V] =
-    for i in 0..deg(f):
-        f.coeffs[i] = -f.coeffs[i]
+    for ci in f.coeffs:
+        result.coeffs.add -ci
 
 func `*`*[TT,V](f,g:PolynomialRing[TT,V]):PolynomialRing[TT,V] =
     result.coeffs = newSeqWith(deg(f)+deg(g)+1, zero(TT))
@@ -130,7 +131,6 @@ func `*=`*[TT,V](f: var PolynomialRing[TT,V],g:PolynomialRing[TT,V]) =
 #TODO generalise this lifting
 liftOps1()
 
-include algos
 func `^`*[TT,V](f:PolynomialRing[TT,V], exp:int):PolynomialRing[TT,V] =
     binaryExponentiation(f, exp)
 
@@ -147,17 +147,19 @@ func `()`*[TT,V,TT2](f:PolynomialRing[TT,V], val: TT2):TT2 =
 #        result = result * val + f.coeffs[i]
 
 func roots*[V](f:PolynomialRing[ZZ,V]):seq[ZZ] =
-    if f.coeffs[deg f] == one(ZZ):
-        if f.coeffs[0] == zero(ZZ):
-            result.add zero(ZZ)
-        var ci = 0
-        while ci <= deg(f) and f.coeffs[ci] == zero(ZZ):
-            inc ci
-        for p in f.coeffs[ci].divisors:
-            if f(p) == zero(ZZ):
-                result.add p
-            if f(-p) == zero(ZZ):
-                result.add -p
+    if f.coeffs[0] == zero(ZZ):
+        result.add zero(ZZ)
+    var ci = 0
+    while ci <= deg(f) and f.coeffs[ci] == zero(ZZ):
+        inc ci
+    for p in f.coeffs[ci].divisors:
+        for q in f.coeffs[deg f].divisors:
+            if p mod q == 0:
+                let x = p div q
+                if f(x) == zero(ZZ):
+                    result.add x
+                if f(-x) == zero(ZZ):
+                    result.add -x
 
 func equalentZZPoly*[V](f:PolynomialRing[QQ,V]):PolynomialRing[QQ,V] =
     let L = lcm(f.coeffs.mapIt(it.den))
@@ -177,6 +179,22 @@ func roots*[V](f:PolynomialRing[QQ,V]):seq[QQ] =
                 result.add x
             if f(-x) == zero(QQ):
                 result.add -x
+
+func factor*[V](f:PolynomialRing[QQ,V]):Factorisation[typeof f] =
+    #TODO this only factors out linear factors
+    let roots = f.roots
+    let x = gen(typeof f)
+    result.unit = f.coeffs[deg(f)] * x^0
+    var f = f div result.unit
+    for a in roots:
+        var exp = 0
+        while f(a) == zero(QQ):
+            inc exp
+            f = f div (x-a)
+        if exp > 0:
+            result.factors[(x-a)] = exp
+    if deg(f) > 0:
+        result.factors[f] = 1
     
 
 when isMainModule:
@@ -193,5 +211,6 @@ when isMainModule:
     echo R
     dump roots(x^5 - 7*x^3 + 6*x^2)
     dump roots(3//1*q^3 - 5//1*q^2 + 5//1* q - 2//1)
+    dump factor(q^5 - 7//1*q^3 + 6//1*q^2)
     
     

@@ -1,5 +1,7 @@
-func binaryExponentiation*[T](value:T, exp:int):T =
-    result = one(T)
+import concepts
+
+func binaryExponentiation*(value:Ring, exp:int):typeof(value) =
+    result = typeof(value).one
     var intermediate = value
     var exp1 = exp
     while exp1 > 0:

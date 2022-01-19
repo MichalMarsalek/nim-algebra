@@ -1,6 +1,7 @@
 include prelude
 import numbers
 import sugar, macros, math
+import algos
 
 type ZZQ[D:static ZZ] = object
     x:ZZ
@@ -45,6 +46,8 @@ func `*`*[D](a,b:ZZQ[D]):ZZQ[D] =
     result.y = a.y * b.x + a.x * b.y
 func `*=`*[D](a: var ZZQ[D], b: ZZQ[D]) =
     a = a * b
+func `^`*[D](a:ZZQ[D], exp:int):ZZQ[D] =
+    binaryExponentiation(a, exp)
     
 
 #TODO - replace with embedings
