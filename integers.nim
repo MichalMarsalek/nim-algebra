@@ -19,7 +19,7 @@ iterator positive*(_:typedesc[ZZ]):ZZ =
 iterator divisors*(a:ZZ):ZZ =
     var a = abs a
     var rest:seq[ZZ]
-    for i in 1..a:
+    for i in ZZ.positive:
         let i_squared = i*i
         if i_squared == a: yield ZZ i
         if i_squared >= a: break
@@ -63,8 +63,9 @@ iterator primes*(_:typedesc[ZZ]):ZZ =
             yield x
 
 func phi*(a:ZZ):ZZ =
-    #TODO
-    discard
+    result = ZZ.one
+    for p,v in factor(a):
+        result *= (p-1)*p^(v-1)
 
 
 

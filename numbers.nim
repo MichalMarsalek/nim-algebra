@@ -25,6 +25,8 @@ template zero*[M](R:typedesc[ZZMod[M]]):R =
     R 0
 template one*[M](R:typedesc[ZZMod[M]]):R =
     R 1
+func card*[M](_:typedesc[ZZMod[M]]):int =
+    M
 
 func `$`*[M](a: ZZMod[M]):string =
     $a.ZZ
@@ -111,5 +113,5 @@ when isMainModule:
         for p in ZZ.primes:
             echo p
             if p > 50: break
-        #dump phi(15)
+        dump phi 15
         dump toSeq (ZZ/15).invertible
