@@ -1,4 +1,4 @@
-include rationals, complex, integers
+include prelude, rationals, complex, integers
 import sugar
 import algos
 import random, algorithm
@@ -105,3 +105,11 @@ when isMainModule:
         for i in 24.divisors:
             echo i
         echo factor -750
+        dump isPrime -7
+        dump isPrime -9
+        dump isPrime 1
+        for p in ZZ.primes:
+            echo p
+            if p > 50: break
+        #dump phi(15)
+        dump toSeq (ZZ/15).invertible

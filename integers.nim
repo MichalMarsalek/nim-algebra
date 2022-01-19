@@ -47,5 +47,24 @@ func factor*(x:ZZ):Factorisation[ZZ] =
     if exp > 0:
       result.factors[d] = exp
 
+func isPrime*(a:ZZ):bool =
+    #TODO implement more efficient version
+    var a = abs a
+    for i in 2..<a:
+        if i*i > a: break
+        if a mod i == ZZ.zero:
+            return false
+    return true
+
+iterator primes*(_:typedesc[ZZ]):ZZ =
+    #TODO implement more efficient version (sieve)
+    for x in ZZ.positive:
+        if x.isPrime:
+            yield x
+
+func phi*(a:ZZ):ZZ =
+    #TODO
+    discard
+
 
 
