@@ -1,6 +1,6 @@
 include prelude
 import numbers
-import sugar, macros, math
+import sugar, macros, math, algorithm
 import algos, factorisations
 {.experimental: "callOperator".}
 
@@ -57,6 +57,11 @@ macro liftOps1():untyped =
 func deg*[TT,V](f: PolynomialRing[TT,V]):int {.inline.} =
     f.coeffs.len - 1
 
+func lc*[TT,V](f: PolynomialRing[TT,V]):TT {.inline.} =
+    f.coeffs[^1]
+func cc*[TT,V](f: PolynomialRing[TT,V]):TT {.inline.} =
+    f.coeffs[0]
+
 iterator pairs*[TT,V](f: PolynomialRing[TT,V]): (int,TT) =
     for i,fi in f.coeffs:
         yield (i,fi)
@@ -70,23 +75,23 @@ func `$`*[TT; V:static string](f:PolynomialRing[TT, V]): string =
         else:
             let typ = if e > 1: fmt"{V}^{e}" else: $V
             let sc = $c
-            if sc == "1":
+            if c == TT.one:
                 parts.add(typ)
-            elif sc == "-1":
+            elif c == -TT.one:
                 parts.add("-"&typ)
             elif "+" in sc or "-" in sc[1..^1]:
                 parts.add(fmt"({sc}){typ}")
             else:
                 parts.add(fmt"{sc}{typ}")
     if parts.len == 0: return "0"
-    parts.join("+").replace("+-","-")
+    parts.reversed.join("+").replace("+-","-")
 
 func rename[TT,V1](f:PolynomialRing[TT,V1], V2: static string):PolynomialRing[TT,V2] =
     PolynomialRing[TT,V2](f) #deprecate?
 
 func normalize[TT,V](f: var PolynomialRing[TT,V]) =
     var i = deg(f)
-    while f.coeffs[i] == zero TT:
+    while (i >= 0) and (f.coeffs[i] == zero TT):
         dec i
     f.coeffs.setlen(i+1)
 
@@ -127,6 +132,26 @@ func `*`*[TT,V](f,g:PolynomialRing[TT,V]):PolynomialRing[TT,V] =
             result.coeffs[i+j] += fi*gj
 func `*=`*[TT,V](f: var PolynomialRing[TT,V],g:PolynomialRing[TT,V]) =
     f = f*g
+    
+func divmod[TT,V](f,g:PolynomialRing[TT,V]):(PolynomialRing[TT,V],PolynomialRing[TT,V]) =
+    #TODO make this more efficient
+    var deg_fg = deg(f) - deg(g)
+    result[1] = f
+    result[0].coeffs = newSeqWith[TT](max(0, deg_fg+1), zero(TT))
+    const x = typeof(f).gen
+    while deg_fg >= 0:
+        let c = result[1].lc / g.lc
+        result[0].coeffs[deg_fg] = c
+        #result[0] += c * x^deg_fg
+        result[1] -= g * c * x^deg_fg
+        deg_fg = deg(result[1]) - deg(g)
+
+func `div`*[TT,V](f,g:PolynomialRing[TT,V]):PolynomialRing[TT,V] =
+    divmod(f,g)[0]
+
+func `mod`*[TT,V](f,g:PolynomialRing[TT,V]):PolynomialRing[TT,V] =
+    divmod(f,g)[1]
+        
 
 #TODO generalise this lifting
 liftOps1()
@@ -184,7 +209,7 @@ func factor*[V](f:PolynomialRing[QQ,V]):Factorisation[typeof f] =
     #TODO this only factors out linear factors
     let roots = f.roots
     let x = gen(typeof f)
-    result.unit = f.coeffs[deg(f)] * x^0
+    result.unit = f.lc * x^0
     var f = f div result.unit
     for a in roots:
         var exp = 0
@@ -209,8 +234,9 @@ when isMainModule:
     echo f(x^2)
     echo f(y)
     echo R
+    dump 6//11*q^2-7//1*q^3+1//1*q^5 - q^5
     dump roots(x^5 - 7*x^3 + 6*x^2)
     dump roots(3//1*q^3 - 5//1*q^2 + 5//1* q - 2//1)
-    dump factor(q^5 - 7//1*q^3 + 6//1*q^2)
+    dump factor((q^5 - 7//1*q^3 + 6//1*q^2)*(q^2 + 1//1))
     
     

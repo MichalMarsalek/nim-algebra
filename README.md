@@ -67,7 +67,7 @@ Functions:
 Supported embeddings:  
 * `int` -> `ZZ` -> `QQ` -> `RR` -> `CC`
 * `QQQ[d]` -> `CC`
-* `ZZZ[d]` -> `CC`
+* `ZZQ[d]` -> `CC`
 * `ZZ` -> `ZZ/(n)`
 * `ZZ_i` -> `CC`
 
@@ -109,7 +109,7 @@ Types:
 Functions:  
 * [x] Usual arithmetic operations
 * [x] `deg` - degree
-* [ ] `roots`
+* [ ] `roots` - done for ZZ,QQ
 * [ ] `gcd` - greatest common divisor
 * [ ] `egcd` - Bezout coefficients using the Extended Euclidean algorithm
 * [ ] `random(d)` - random polynomial with max degree `d` (over finite rings)

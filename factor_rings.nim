@@ -1,11 +1,11 @@
 include prelude
 import numbers
 import sugar, macros, math
-import rings
+import polynomials
 import typetraits
 
-type FactorRing*[M:static auto] = object #Just polynomial rings for now?
-    val:typeof(M)
+type FactorRing*[TT;M:static TT] = object #Just polynomial rings for now?
+    val:TT
 
 type Ideal*[P] = object
     generator*: P
@@ -15,24 +15,29 @@ func I*[P](p:P):Ideal[P] =
 func `$`*(p:Ideal):string =
     "I(" & $p.generator & ")"
 
-template `+`*[TT](poly:TT, M:static[Ideal[TT]]):FactorRing[M] =
-    debugEcho "here"
-    FactorRing[M.generator](val:poly)
 
-func `+++`*[TT](poly:TT, M:static TT):FactorRing[M] =
+template `+`*[TT](poly:TT, M:static[Ideal[TT]]):FactorRing[TT,M] =
     result.val = poly
 
-func `+`*[TT; M:static[TT]](f,g:FactorRing[M]):FactorRing[M] =
-    result.val = f.val + g.val
+{.push checks: off.}
 
-func `$`*[TT; M:static[TT]](f:FactorRing[M]):string =
+
+
+func `+++`*[TT](poly:TT, M:static TT):FactorRing[TT, M] =
+    result.val = poly
+
+func `+`*[TT, M](f,g:FactorRing[TT,M]):FactorRing[TT, M] =
+    mixin `+`, `mod`
+    result.val = (f.val + g.val) mod M
+
+{.pop.}
+func `$`*[TT, M](f:FactorRing[TT, M]):string =
     $f.val & " + I(" & $M & ")"
 
 when isMainModule:
     type R = PR(ZZ,x)
-    static: echo (x^3).coeffs
     const t = x^3
     let a = x +++ t
-    #let b = x+1 + I(x^3)
+    #let b = x+1 + I(t)
     #echo a+b
     echo typeof(I(x^2))

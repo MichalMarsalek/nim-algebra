@@ -5,18 +5,21 @@ type Factorisation*[T] = object
   factors*: OrderedTable[T,int]
 
 func `$`*[T](x:Factorisation[T]):string =
-  if x.unit == 1:
+  if x.unit == T.one:
     discard
-  elif x.unit == -1:
+  elif x.unit == -T.one:
     result &= "-"
   else:
     result &= $x.unit & " * "
   var parts:seq[string]
   for k,v in x.factors:
+    var kk = $k
+    if "+" in kk or "-" in kk:
+        kk = "(" & kk & ")"
     if v == 1:
-      parts.add $k
+      parts.add kk
     else:
-      parts.add $k & "^" & $v
+      parts.add kk & "^" & $v
   result &= parts.join(" * ")
 
 func value*[T](x:Factorisation[T]):T =

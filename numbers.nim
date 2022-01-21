@@ -8,6 +8,10 @@ type CC* = Complex[float] #this is only temporary
 type QQ* = Rational[ZZ]
 type Number* = ZZ | QQ | RR | CC
 
+func `$`*(x:QQ):string =
+    if x.den == 1: return $x.num
+    return $x.num & "/" & $x.den
+
 type ZZMod*[M: static ZZ] = distinct ZZ
 
 template `/`*(T:typedesc[ZZ],m:int):typedesc =

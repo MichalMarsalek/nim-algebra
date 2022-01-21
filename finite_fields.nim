@@ -3,6 +3,7 @@ import numbers
 import math
 import sugar, macros
 import algos
+import random
 {.experimental: "callOperator".}
 
 #Conway polynomials:
@@ -20,23 +21,36 @@ type GenFiniteField[P: static int,
                       V: static string="α"] = object
   coeffs: array[DEG,int]
 
-type FiniteField = BinaryField | FiniteField #| PrimeField
+type FiniteField* = BinaryField | GenFiniteField #| PrimeField
 
 #BINARY FIELD
 template zero*[DEG, MOD, V](R:typedesc[BinaryField[DEG, MOD, V]]):R = discard
 template one*[DEG, MOD, V](R:typedesc[BinaryField[DEG, MOD, V]]):R = R 1'u64
 template gen*[DEG, MOD, V](R:typedesc[BinaryField[DEG, MOD, V]]):R = R 2'u64
-func `+`[DEG,MOD, V](a,b:BinaryField[DEG,MOD, V]):BinaryField[DEG,MOD, V] {.inline.} =
+
+proc random*[DEG,MOD,V](R:typedesc[BinaryField[DEG,MOD,V]]):R =
+    const mx = (1 shl DEG) - 1
+    R rand(mx)
+
+iterator items[DEG,MOD,V](F:typedesc[BinaryField[DEG,MOD,V]]):F =
+    for i in 0..<((1 shl DEG) - 1):
+        yield F i
+
+iterator nonzero[DEG,MOD,V](F:typedesc[BinaryField[DEG,MOD,V]]):F =
+    for i in 1..<((1 shl DEG) - 1):
+        yield F i
+
+func `+`*[DEG,MOD, V](a,b:BinaryField[DEG,MOD, V]):BinaryField[DEG,MOD, V] {.inline.} =
     BinaryField[DEG,MOD, V] (a.uint64 xor b.uint64)
-func `+=`[DEG,MOD, V](a:var BinaryField[DEG,MOD, V],b:BinaryField[DEG,MOD, V]) {.inline.} =
+func `+=`*[DEG,MOD, V](a:var BinaryField[DEG,MOD, V],b:BinaryField[DEG,MOD, V]) {.inline.} =
     a = a + b
-func `-`[DEG,MOD, V](a,b:BinaryField[DEG,MOD, V]):BinaryField[DEG,MOD, V] {.inline.} =
+func `-`*[DEG,MOD, V](a,b:BinaryField[DEG,MOD, V]):BinaryField[DEG,MOD, V] {.inline.} =
     a + b
-func `-=`[DEG,MOD, V](a:var BinaryField[DEG,MOD, V],b:BinaryField[DEG,MOD, V]) {.inline.} =
+func `-=`*[DEG,MOD, V](a:var BinaryField[DEG,MOD, V],b:BinaryField[DEG,MOD, V]) {.inline.} =
     a = a - b
-func `-`[DEG,MOD, V](a:  BinaryField[DEG,MOD, V]):BinaryField[DEG,MOD, V] {.inline.} =
+func `-`*[DEG,MOD, V](a:  BinaryField[DEG,MOD, V]):BinaryField[DEG,MOD, V] {.inline.} =
     a
-func `*`[DEG,MOD, V](a,b:BinaryField[DEG,MOD, V]):BinaryField[DEG,MOD, V] =
+func `*`*[DEG,MOD, V](a,b:BinaryField[DEG,MOD, V]):BinaryField[DEG,MOD, V] =
     const overflowCheck = 1 shl (DEG-1)
     var a = a.uint64
     var b = b.uint64
@@ -49,22 +63,22 @@ func `*`[DEG,MOD, V](a,b:BinaryField[DEG,MOD, V]):BinaryField[DEG,MOD, V] =
             a = (a xor overflowCheck) shl 1 xor MOD
         else:
             a = a shl 1
-func `*=`[DEG,MOD, V](a:var BinaryField[DEG,MOD, V],b:BinaryField[DEG,MOD, V]) {.inline.} =
+func `*=`*[DEG,MOD, V](a:var BinaryField[DEG,MOD, V],b:BinaryField[DEG,MOD, V]) {.inline.} =
     a = a * b
 
-func `^`[DEG,MOD, V](a:BinaryField[DEG,MOD, V],exp:int):BinaryField[DEG,MOD, V] =
+func `^`*[DEG,MOD, V](a:BinaryField[DEG,MOD, V],exp:int):BinaryField[DEG,MOD, V] =
     binaryExponentiation(a, exp)
 
-func `/`[DEG,MOD, V](a,b:BinaryField[DEG,MOD, V]):BinaryField[DEG,MOD, V] {.inline.} =
+func `/`*[DEG,MOD, V](a,b:BinaryField[DEG,MOD, V]):BinaryField[DEG,MOD, V] {.inline.} =
     result = a
     var b = b
     for i in 2..DEG:
         b *= b
         result *= b
-func `/=`[DEG,MOD, V](a:var BinaryField[DEG,MOD, V],b:BinaryField[DEG,MOD, V]) {.inline.} =
+func `/=`*[DEG,MOD, V](a:var BinaryField[DEG,MOD, V],b:BinaryField[DEG,MOD, V]) {.inline.} =
     a = a / b
 
-func `$`[DEG,MOD,V](a: BinaryField[DEG,MOD,V]):string =
+func `$`*[DEG,MOD,V](a: BinaryField[DEG,MOD,V]):string =
     var parts:seq[string]
     for i in countdown(63,2):
         if ((a.uint64 shr i) and 1'u64) == 1'u64:
@@ -75,18 +89,30 @@ func `$`[DEG,MOD,V](a: BinaryField[DEG,MOD,V]):string =
         parts.add "1"
     if parts.len == 0: parts.add "0"
     parts.join(" + ")
+
+func trace*[DEG,MOD,V](a: BinaryField[DEG,MOD,V]):BinaryField[DEG,MOD,V] =
+    var a = a
+    result = a
+    for i in 2..DEG:
+        a = a*a
+        result += a
+
+func norm*[DEG,MOD,V](a: BinaryField[DEG,MOD,V]):BinaryField[DEG,MOD,V] =
+    discard #TODO
     
 #Temporary - replace with embeddings:
 func `+`[DEG,MOD, V](a:BinaryField[DEG,MOD, V], b:int):BinaryField[DEG,MOD, V] {.inline.} =
     a + BinaryField[DEG,MOD, V]b
 
 #GENERAL FIELD
+
+discard """
 template zero*(R:typedesc[GenFiniteField]):R = discard
 template one*(R:typedesc[GenFiniteField]):R = result.coeffs[0] = 1
 template gen*(R:typedesc[GenFiniteField]):R = result.coeffs[1] = 1
 
 
-func random*[P,DEG,MOD,V](R:typedesc[GenFiniteField[P,DEG,MOD,V]]):R =
+proc random*[P,DEG,MOD,V](R:typedesc[GenFiniteField[P,DEG,MOD,V]]):R =
     for i in 0..<DEG:
         result.coeffs = random(ZZ/P)
 
@@ -113,7 +139,6 @@ iterator invertible*[P,DEG,MOD, V](R:typedesc[GenFiniteField[P,DEG,MOD,V]]):R =
     for e in R.nonzero:
         yield e
 
-discard """
 func `+=`[P,DEG,MOD, V](a:var GenFiniteField[P,DEG,MOD, V],b:GenFiniteField[P,DEG,MOD, V]) {.inline.} =
     for i in 0..<DEG:
         a.coeffs[i] = (a.coeffs[i] + b.coeffs[i]) mod P
@@ -172,19 +197,11 @@ func factorPower(c:int):(int,int) =
         if q*q > car: break
         if car mod q == 0:
             p = q
-            while car > 0:
+            while car > 1:
                 car = car div p
                 inc d
             break
     return (p,d)
-
-iterator items[DEG,MOD,V](F:typedesc[BinaryField[DEG,MOD,V]]):F =
-    for i in 0..<(1 shl (DEG-1)):
-        yield F i
-
-iterator nonzero[DEG,MOD,V](F:typedesc[BinaryField[DEG,MOD,V]]):F =
-    for i in 1..<(1 shl (DEG-1)):
-        yield F i
 
 macro GF(cardinality:typed,variable="α"):typedesc =  
     # add injecting generator
@@ -208,7 +225,7 @@ when isMainModule:
     const x = F.gen
     let a:F = F 0b111 #α^2 + α + 1
     let b:F = F 0b1011 #α^3 + α + 1
-    echo a
+    echo $a
     echo x^2 + x + 1
     for e in GF(2^3,"X"):
-        echo e
+        echo (e, trace e)
