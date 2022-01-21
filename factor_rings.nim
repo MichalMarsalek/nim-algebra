@@ -12,6 +12,8 @@ type Ideal*[P] = object
 
 func I*[P](p:P):Ideal[P] =
     result.generator = p
+func `*`*[P](p:P, _:typedesc[P]):Ideal[P] =
+    I(p)
 func `$`*(p:Ideal):string =
     "I(" & $p.generator & ")"
 
@@ -27,5 +29,5 @@ func `$`*[TT, M](f:FactorRing[TT, M]):string =
 
 when isMainModule:
     type R = PR(ZZ,x)
-    let b = x+1 + I(x^3)
+    let b = x+1 + (x^3)*R
     echo b
