@@ -59,6 +59,7 @@ Functions:
 * [x] `random(ZZ/(n))` - random element
 * [x] `divisors(a:ZZ)` - iterator over all positive divisors
 * [x] `positive(ZZ)` - iterator over all positive elements
+* [x] `primes(ZZ)` - iterator over all (positive) primes
 * [x] `items(ZZ/(n))` - iterator over all elements
 * [x] `nonzero(ZZ/(n))` - iterator over all nonzero elements
 * [x] `invertible(ZZ/(n))` - iterator over all invertible elements
