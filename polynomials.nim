@@ -27,14 +27,47 @@ func gen*[TT; V:static string](R:typedesc[PolynomialRing[TT, V]]):R =
     PolynomialRing[TT, V](coeffs: @[zero(typeof TT), one(typeof TT)])
 
 #Type construction macros
-macro PR*(ring:typedesc[Ring],variable:untyped{ident}):typedesc[PolynomialRing] =
-    let varname = $variable
-    result = quote do:
-        type PolyRing = PolynomialRing[`ring`, `varname`]
-        when not declared(`variable`):
-            const `variable` = PolynomialRing[`ring`, `varname`](coeffs: @[`ring`.zero, `ring`.one]) #TODO replace with .gen
-        PolyRing        
-    echo toStrLit result
+macro PR*(R:typedesc[Ring],variables:varargs[untyped]):typedesc[PolynomialRing] =
+    result = nnkStmtList.newTree
+    var prevTypeSym, currTypeSym: NimNode
+    prevTypeSym = R
+    for vari in variables:
+        currTypeSym = genSym(nskType, "polyring")
+        #define the type
+        result.add(
+            nnkTypeSection.newTree(nnkTypeDef.newTree(
+              currTypeSym,
+              newEmptyNode(),
+              nnkBracketExpr.newTree(
+                newIdentNode("PolynomialRing"),
+                prevTypeSym,
+                newLit($vari)
+              )
+            ))            
+        )
+        #introduce the generator
+        if vari.kind == nnkIdent:
+            result.add(nnkWhenStmt.newTree(
+                nnkElifBranch.newTree(
+                  nnkPrefix.newTree(
+                    newIdentNode("not"),
+                    nnkCall.newTree(
+                      newIdentNode("declared"),
+                      newIdentNode($vari)
+                    )
+                  ),
+                  nnkConstSection.newTree(nnkConstDef.newTree(
+                    newIdentNode($vari),
+                    newEmptyNode(),
+                    nnkDotExpr.newTree(
+                      currTypeSym,
+                      newIdentNode("gen")
+                    )
+                  ))
+                )
+            ))
+        prevTypeSym = currTypeSym
+    result.add prevTypeSym
 
 #Lifting macros TODO make it general
 func ConstantPoly*[TT,V](a:TT):PolynomialRing[TT,V] =
@@ -252,5 +285,8 @@ when isMainModule:
         dump (x, f2(x))
     dump roots(f2)
     dump factor f2
+    
+    type RR = PR(ZZ, X,"Y",Z,W)
+    echo RR
     
     
