@@ -10,21 +10,22 @@ import random
 const SMALL_BIN_IRRED_POLYS = [0'u64,0'u64,0x3'u64,0x3'u64,0x3'u64,0x5'u64,0x1b'u64,0x3'u64,0x1d'u64,0x11'u64,0x6f'u64,0x5'u64,0xeb'u64,0x1b'u64,0xa9'u64,0x35'u64,0x2d'u64,0x9'u64,0x1403'u64,0x27'u64,0x6f3'u64,0x65'u64,0x1f61'u64,0x21'u64,0x1e6a9'u64,0x145'u64,0x45d3'u64,0x16ad'u64,0x20e5'u64,0x5'u64,0x328af'u64,0x9'u64,0x8299'u64,0x3d49'u64,0x199f7'u64,0xca5'u64,0xda6163'u64,0x3f'u64,0x4727'u64,0x9ee5'u64,0xa5b12b'u64,0x9'u64,0x47141a67'u64,0x59'u64,0x10b001b'u64,0x12d841'u64,0xb24001'u64,0x21'u64,0x2821d89'u64,0x55f'u64,0x380b7755'u64,0x19241'u64,0x1ea2c493'u64,0x47'u64,0x5ea27a097'u64,0xe91'u64,0x244486b1d'u64,0x292d7f'u64,0xa7451deb'u64,0x7b'u64,0x3697464a113d'u64,0x27'u64,0x17f3f7043'u64,0x1c38b1f'u64,0x247f43cb7'u64]
 include conway_polys
 
-type BinaryField[DEG: static int,
+type BinaryField*[DEG: static int,
                       MOD: static uint64,
                       V: static string="α"] =
   distinct uint64
 
-type GenFiniteField[P: static int,
+type GenFiniteField*[P: static int,
                       DEG: static int,
                       MOD: static array[DEG,int],
                       V: static string="α"] = object
   coeffs: array[DEG,int]
 
-type FiniteField* = BinaryField | GenFiniteField #| PrimeField
+type FiniteField* = concept type T
+    T is BinaryField or T is GenFiniteField #| PrimeField
 
 #BINARY FIELD
-template zero*[DEG, MOD, V](R:typedesc[BinaryField[DEG, MOD, V]]):R = discard
+template zero*[DEG, MOD, V](R:typedesc[BinaryField[DEG, MOD, V]]):R = R 0'u64
 template one*[DEG, MOD, V](R:typedesc[BinaryField[DEG, MOD, V]]):R = R 1'u64
 template gen*[DEG, MOD, V](R:typedesc[BinaryField[DEG, MOD, V]]):R = R 2'u64
 
@@ -32,14 +33,18 @@ proc random*[DEG,MOD,V](R:typedesc[BinaryField[DEG,MOD,V]]):R =
     const mx = (1 shl DEG) - 1
     R rand(mx)
 
-iterator items[DEG,MOD,V](F:typedesc[BinaryField[DEG,MOD,V]]):F =
-    for i in 0..<((1 shl DEG) - 1):
+iterator items*[DEG,MOD,V](F:typedesc[BinaryField[DEG,MOD,V]]):F =
+    for i in 0..<(1 shl DEG):
         yield F i
 
-iterator nonzero[DEG,MOD,V](F:typedesc[BinaryField[DEG,MOD,V]]):F =
-    for i in 1..<((1 shl DEG) - 1):
+iterator nonzero*[DEG,MOD,V](F:typedesc[BinaryField[DEG,MOD,V]]):F =
+    for i in 1..<(1 shl DEG):
         yield F i
 
+func `==`*[DEG,MOD, V](a,b:BinaryField[DEG,MOD, V]):bool {.inline.} =
+    a.uint64 == b.uint64
+func `!=`*[DEG,MOD, V](a,b:BinaryField[DEG,MOD, V]):bool {.inline.} =
+    a.uint64 != b.uint64
 func `+`*[DEG,MOD, V](a,b:BinaryField[DEG,MOD, V]):BinaryField[DEG,MOD, V] {.inline.} =
     BinaryField[DEG,MOD, V] (a.uint64 xor b.uint64)
 func `+=`*[DEG,MOD, V](a:var BinaryField[DEG,MOD, V],b:BinaryField[DEG,MOD, V]) {.inline.} =
@@ -190,20 +195,20 @@ func `$`[P,DEG,MOD,V](a: GenFiniteField[P,DEG,MOD,V]):string =
 
 type Field* = QQ | RR | CC | FiniteField
 
-func factorPower(c:int):(int,int) =
+func factorPower*(c:int):(int,int) =
     var p,d:int
     var car = c
     for q in 2..car:
-        if q*q > car: break
         if car mod q == 0:
             p = q
             while car > 1:
                 car = car div p
                 inc d
             break
+        if q*q > car: break
     return (p,d)
 
-macro GF(cardinality:typed,variable="α"):typedesc =  
+macro GF*(cardinality:typed,variable="α"):typedesc =  
     # add injecting generator
     var base = cardinality
     var exponent = quote do: 1
@@ -218,7 +223,7 @@ macro GF(cardinality:typed,variable="α"):typedesc =
             #type R = PR(ZZ/(p), x) circular dependency
             #R/(x^(d*`exponent`))
             int #placeholder
-    echo toStrLit result
+    #echo toStrLit result
 
 when isMainModule:
     type F = GF(16,"α")

@@ -1,5 +1,5 @@
 include prelude
-import numbers
+import numbers, finite_fields
 import sugar, macros, math, algorithm
 import algos, factorisations
 {.experimental: "callOperator".}
@@ -16,29 +16,29 @@ template `$`*(T:typedesc[PolynomialRing]):string =
     inner = inner[3..^2]
   "PR(" & inner & "," & T.V & ")"
 
-type Ring* = Number | PolynomialRing
+type Ring* = Number | PolynomialRing | FiniteField
+
+func zero*[TT;V:static string](R:typedesc[PolynomialRing[TT, V]]):R =
+    PolynomialRing[TT, V](coeffs: @[zero(typeof TT)])
+func one*[TT; V:static string](R:typedesc[PolynomialRing[TT, V]]):R =
+    PolynomialRing[TT, V](coeffs: @[one(typeof TT)])
+
+func gen*[TT; V:static string](R:typedesc[PolynomialRing[TT, V]]):R =
+    PolynomialRing[TT, V](coeffs: @[zero(typeof TT), one(typeof TT)])
 
 #Type construction macros
 macro PR*(ring:typedesc[Ring],variable:untyped{ident}):typedesc[PolynomialRing] =
     let varname = $variable
     result = quote do:
+        type PolyRing = PolynomialRing[`ring`, `varname`]
         when not declared(`variable`):
-            const `variable` = PolynomialRing[`ring`, `varname`](coeffs: @[zero `ring`, one `ring`])
-        type temp = PolynomialRing[`ring`, `varname`]
-        temp
+            const `variable` = PolynomialRing[`ring`, `varname`](coeffs: @[`ring`.zero, `ring`.one]) #TODO replace with .gen
+        PolyRing        
+    echo toStrLit result
 
 #Lifting macros TODO make it general
 func ConstantPoly*[TT,V](a:TT):PolynomialRing[TT,V] =
     PolynomialRing[TT, V](coeffs: @[a])
-
-template zero*[TT;V:static string](R:typedesc[PolynomialRing[TT, V]]):R =
-    PolynomialRing[TT, V](coeffs: @[zero(typeof TT)])
-template one*[TT; V:static string](R:typedesc[PolynomialRing[TT, V]]):R =
-    PolynomialRing[TT, V](coeffs: @[one(typeof TT)])
-
-template gen*[TT; V:static string](R:typedesc[PolynomialRing[TT, V]]):R =
-    PolynomialRing[TT, V](coeffs: @[zero(typeof TT), one(typeof TT)])
-
 
 macro liftOp1(op0:string):untyped =
     let op = newIdentNode($op0)
@@ -171,6 +171,9 @@ func `()`*[TT,V,TT2](f:PolynomialRing[TT,V], val: TT2):TT2 =
 #    for i in countdown(deg f, 0):
 #        result = result * val + f.coeffs[i]
 
+
+#ROOTS & FACTORING
+
 func roots*[V](f:PolynomialRing[ZZ,V]):seq[ZZ] =
     if f.coeffs[0] == zero(ZZ):
         result.add zero(ZZ)
@@ -190,6 +193,10 @@ func equalentZZPoly*[V](f:PolynomialRing[QQ,V]):PolynomialRing[QQ,V] =
     let L = lcm(f.coeffs.mapIt(it.den))
     result.coeffs = f.coeffs.mapIt(it * L)
 
+func roots*[TT:FiniteField, V](f:PolynomialRing[TT,V]):seq[TT] =
+    for x in TT:
+        if f(x) == TT.zero:
+            result.add x
 func roots*[V](f:PolynomialRing[QQ,V]):seq[QQ] =
     var f = f.equalentZZPoly
     if f.coeffs[0] == zero(QQ):
@@ -205,7 +212,7 @@ func roots*[V](f:PolynomialRing[QQ,V]):seq[QQ] =
             if f(-x) == zero(QQ):
                 result.add -x
 
-func factor*[V](f:PolynomialRing[QQ,V]):Factorisation[typeof f] =
+func factor*[TT,V](f:PolynomialRing[TT,V]):Factorisation[typeof f] =
     #TODO this only factors out linear factors
     let roots = f.roots
     let x = gen(typeof f)
@@ -213,7 +220,7 @@ func factor*[V](f:PolynomialRing[QQ,V]):Factorisation[typeof f] =
     var f = f div result.unit
     for a in roots:
         var exp = 0
-        while f(a) == zero(QQ):
+        while f(a) == zero(TT):
             inc exp
             f = f div (x-a)
         if exp > 0:
@@ -225,7 +232,7 @@ func factor*[V](f:PolynomialRing[QQ,V]):Factorisation[typeof f] =
 when isMainModule:
     echo int.zero
     type R = PR(ZZ,x)
-    type S = PR(ZZ,y)
+    type S = PR(ZZ,y) 
     type S2 = PR(QQ,q)
     let f = 1 + x^2 + x
     echo f
@@ -238,5 +245,12 @@ when isMainModule:
     dump roots(x^5 - 7*x^3 + 6*x^2)
     dump roots(3//1*q^3 - 5//1*q^2 + 5//1* q - 2//1)
     dump factor((q^5 - 7//1*q^3 + 6//1*q^2)*(q^2 + 1//1))
+    type FFR = PR(GF(2), xx)
+    let f2 = xx^2 + FFR.one
+    dump f2
+    for x in GF(2):
+        dump (x, f2(x))
+    dump roots(f2)
+    dump factor f2
     
     
