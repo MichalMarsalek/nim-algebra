@@ -96,15 +96,15 @@ echo a*b
 ```
 
 Notes:  
-Finite fields of small characteristic and extension degree are instantiated using a built int database of Conway polynomials.  
+Finite fields of small characteristic and extension degree are instantiated using a built in database of Conway polynomials.  
 For all fields instantiated using `GF()`, the ring generator is also a generator of the multiplicative group (property of Conway polynomials).
 If you need to work with larger fields or with custom irreducible modulus, you can instantiate them manually using a general FactorRing.  
-Binary fields of size <= 2^64 have a special opzimized implementation.
+Binary fields of size <= 2^64 have a special optimized implementation.
 
 ## Polynomial rings
 Types:  
 * [x] `PR(R,x)` - polynomial ring in variable `x` over the base ring `R`
-* [ ] `PR(R,x,y,z)` - multivariate polynomials over the base ring `R`
+* [x] `PR(R,x,y,z)` - multivariate polynomials over the base ring `R`
 
 Functions:  
 * [x] Usual arithmetic operations
@@ -173,7 +173,7 @@ Functions:
 * [x] `T` - transposition
 * [x] `A[i,j]` - indexing
 * [x] `v.norm(p=2)` - norm of a vector - p can be in {0,1,2,-1} where -1 indicates the oo-norm. 2-norm is only available over the reals
-* [x] `v.norm2` - norm of a real vector squared
+* [x] `v.norm2` - norm of a vector squared
 * [ ] `todo` - matrix norms
 * [x] `det` - determinant
 * [x] `trace` - determinant
