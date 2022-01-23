@@ -209,21 +209,27 @@ func factorPower*(c:int):(int,int) =
         if q*q > car: break
     return (p,d)
 
+func asarray(x:seq[int],d:static int):array[d, int] =
+    for i in 0..<d:
+        result[i] = x[i]
+
 macro GF*(cardinality:typed,variable="α"):typedesc =  
     # add injecting generator
     var base = cardinality
     var exponent = quote do: 1
     if cardinality.kind == nnkInfix:
-        var base = cardinality[1]
-        var exponent = cardinality[2]
+        base = cardinality[1]
+        exponent = cardinality[2]
     result = quote do:  #replace this with a faster algo          
-        const (p,d) = factorPower `base`
-        when p == 2:
-            BinaryField[d*`exponent`, SMALL_BIN_IRRED_POLYS[d*`exponent`], `variable`]
+        const (p,d0) = factorPower `base`
+        const d = d0 * `exponent`
+        when p == 2 and d <= 64:
+            BinaryField[d, SMALL_BIN_IRRED_POLYS[d], `variable`]
+        elif (p,d) in CONWAY_POLYNOMIALS:
+            GenFiniteField[p, d, CONWAY_POLYNOMIALS[(p,d)].asarray(d), `variable`]
         else:
-            #type R = PR(ZZ/(p), x) circular dependency
-            #R/(x^(d*`exponent`))
-            int #placeholder
+            {.error: "Conway_" & $p & "," & $d & " not in DB. If you wish to work in a finite field of size " & $p & "^" & $d & ", pick an irreducible polynomial and instantiate the field as a general factor ring."}
+            
     #echo toStrLit result
 
 when isMainModule:
@@ -236,3 +242,4 @@ when isMainModule:
     echo x^2 + x + F.one
     for e in GF(2^3,"X"):
         echo (e, trace e)
+    type F2 = GF(3^200)
