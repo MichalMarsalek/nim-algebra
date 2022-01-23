@@ -104,10 +104,6 @@ func trace*[DEG,MOD,V](a: BinaryField[DEG,MOD,V]):BinaryField[DEG,MOD,V] =
 
 func norm*[DEG,MOD,V](a: BinaryField[DEG,MOD,V]):BinaryField[DEG,MOD,V] =
     discard #TODO
-    
-#Temporary - replace with embeddings:
-func `+`[DEG,MOD, V](a:BinaryField[DEG,MOD, V], b:int):BinaryField[DEG,MOD, V] {.inline.} =
-    a + BinaryField[DEG,MOD, V]b
 
 #GENERAL FIELD
 

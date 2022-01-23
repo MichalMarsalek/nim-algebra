@@ -3,14 +3,14 @@ import numbers
 import sugar, macros, math
 import algos
 
-type ZZQ[D:static ZZ] = object
+type ZZQ*[D:static ZZ] = object
     x:ZZ
     y:ZZ
-type ZZ_i = ZZQ[-1]
-type QQQ[D:static ZZ] = object
+type ZZ_i* = ZZQ[-1]
+type QQQ*[D:static ZZ] = object
     x:QQ
     y:QQ
-type QQ_i = QQQ[-1]
+type QQ_i* = QQQ[-1]
 
 # ZZQ[D] ARITMETHICS & PRINTING
 template zero*[D:static ZZ](R:typedesc[ZZQ[D]]):R = discard

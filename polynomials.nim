@@ -6,9 +6,6 @@ import algos, factorisations
 
 type PolynomialRing*[TT; V:static string] = object
     coeffs*:seq[TT]
-type PolynomialRing2*[TT;V1,V2:static string] = PolynomialRing[PolynomialRing[TT,V1],V2]
-type PolynomialRing3*[TT;V1,V2,V3:static string] = PolynomialRing[PolynomialRing2[TT,V1,V2],V3]
-type PolynomialRing4*[TT;V1,V2,V3,V4:static string] = PolynomialRing[PolynomialRing3[TT,V1,V2,V3],V4]
 
 template `$`*(T:typedesc[PolynomialRing]):string =
   var inner = $T.TT
@@ -69,23 +66,8 @@ macro PR*(R:typedesc[Ring],variables:varargs[untyped]):typedesc[PolynomialRing] 
         prevTypeSym = currTypeSym
     result.add prevTypeSym
 
-#Lifting macros TODO make it general
 func ConstantPoly*[TT,V](a:TT):PolynomialRing[TT,V] =
     PolynomialRing[TT, V](coeffs: @[a])
-
-macro liftOp1(op0:string):untyped =
-    let op = newIdentNode($op0)
-    result = quote do:
-        func `op`*[TT,V](f:PolynomialRing[TT,V],g:TT):PolynomialRing[TT,V] =
-            `op`(f, ConstantPoly[TT,V](g))
-        func `op`*[TT,V](f:TT,g:PolynomialRing[TT,V]):PolynomialRing[TT,V] =
-            `op`(ConstantPoly[TT,V](f), g)
-    #echo toStrLit(result)
-macro liftOps1():untyped =
-    result = quote do:
-        liftOp1 "+"
-        liftOp1 "-"
-        liftOp1 "*"
 
 func deg*[TT,V](f: PolynomialRing[TT,V]):int {.inline.} =
     f.coeffs.len - 1
@@ -98,6 +80,12 @@ func cc*[TT,V](f: PolynomialRing[TT,V]):TT {.inline.} =
 iterator pairs*[TT,V](f: PolynomialRing[TT,V]): (int,TT) =
     for i,fi in f.coeffs:
         yield (i,fi)
+
+
+func `==`*[TT,V](f,g: PolynomialRing[TT,V]):bool =
+    f.coeffs == g.coeffs
+func `!=`*[TT,V](f,g: PolynomialRing[TT,V]):bool =
+    f.coeffs != g.coeffs
 
 func `$`*[TT; V:static string](f:PolynomialRing[TT, V]): string =
     var parts: seq[string]
@@ -117,7 +105,7 @@ func `$`*[TT; V:static string](f:PolynomialRing[TT, V]): string =
             else:
                 parts.add(fmt"{sc}{typ}")
     if parts.len == 0: return "0"
-    parts.reversed.join("+").replace("+-","-")
+    parts.reversed.join(" + ").replace("+ -","-")
 
 func rename[TT,V1](f:PolynomialRing[TT,V1], V2: static string):PolynomialRing[TT,V2] =
     PolynomialRing[TT,V2](f) #deprecate?
@@ -163,6 +151,7 @@ func `*`*[TT,V](f,g:PolynomialRing[TT,V]):PolynomialRing[TT,V] =
     for i,fi in f:
         for j,gj in g:
             result.coeffs[i+j] += fi*gj
+    normalize result
 func `*=`*[TT,V](f: var PolynomialRing[TT,V],g:PolynomialRing[TT,V]) =
     f = f*g
     
@@ -184,10 +173,6 @@ func `div`*[TT,V](f,g:PolynomialRing[TT,V]):PolynomialRing[TT,V] =
 
 func `mod`*[TT,V](f,g:PolynomialRing[TT,V]):PolynomialRing[TT,V] =
     divmod(f,g)[1]
-        
-
-#TODO generalise this lifting
-liftOps1()
 
 func `^`*[TT,V](f:PolynomialRing[TT,V], exp:int):PolynomialRing[TT,V] =
     binaryExponentiation(f, exp)
@@ -199,11 +184,6 @@ func `()`*[TT,V,TT2](f:PolynomialRing[TT,V], val: TT2):TT2 =
     result = zero(TT2)
     for i in countdown(deg f, 0):
         result = result * val + f.coeffs[i]
-
-#func `()`*[TT,V1,V2](f:PolynomialRing[TT,V1], val: PolynomialRing[TT,V2]):PolynomialRing[TT,V2] =
-#    for i in countdown(deg f, 0):
-#        result = result * val + f.coeffs[i]
-
 
 #ROOTS & FACTORING
 
@@ -263,29 +243,12 @@ func factor*[TT,V](f:PolynomialRing[TT,V]):Factorisation[typeof f] =
     
 
 when isMainModule:
-    echo int.zero
     type R = PR(ZZ,x)
-    type S = PR(ZZ,y) 
-    type S2 = PR(QQ,q)
-    let f = 1 + x^2 + x
+    let f = R.one + x^2 + x
     echo f
     echo f("w")
     echo f(2)
-    echo f(x^2)
-    echo f(y)
-    echo R
-    dump 6//11*q^2-7//1*q^3+1//1*q^5 - q^5
-    dump roots(x^5 - 7*x^3 + 6*x^2)
-    dump roots(3//1*q^3 - 5//1*q^2 + 5//1* q - 2//1)
-    dump factor((q^5 - 7//1*q^3 + 6//1*q^2)*(q^2 + 1//1))
-    type FFR = PR(GF(2), xx)
-    let f2 = xx^2 + FFR.one
-    dump f2
-    for x in GF(2):
-        dump (x, f2(x))
-    dump roots(f2)
-    dump factor f2
-    
+    #echo f(x^2)
     type RR = PR(ZZ, X,"Y",Z,W)
     echo RR
     

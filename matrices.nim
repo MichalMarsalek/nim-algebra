@@ -5,12 +5,12 @@ import algos
 import math
 #import polynomials
 
-type MatrixSpace[TT; N, M:static int] = object
-    entries: array[N*M, TT]
+type MatrixSpace*[TT; N, M:static int] = object
+    entries*: array[N*M, TT]
 type ColVectorSpace[TT; N:static int] = MatrixSpace[TT, N, 1]
 type RowVectorSpace[TT; M:static int] = MatrixSpace[TT, 1, M]
 
-type AffineSpace[V] = object
+type AffineSpace*[V] = object
     generators: seq[V]
     translation: V
     empty: bool
@@ -25,7 +25,7 @@ func `[]`*[TT;N,M:static int](a:MatrixSpace[TT,N,M],n,m:int):TT =
 func rows*[TT;N,M:static int](a: var MatrixSpace[TT,N,M],n:int):RowVectorSpace[TT,M] =
   for m in 0..<M:
     result.entries[m] = a.entries[n+m*N]
-func cols*[TT;N,M:static int](a: var MatrixSpace[TT,N,M],n:int):ColVectorSpace[TT,N] =
+func cols*[TT;N,M:static int](a: var MatrixSpace[TT,N,M],m:int):ColVectorSpace[TT,N] =
   for n in 0..<N:
     result.entries[n] = a.entries[n+m*N]
 
@@ -80,14 +80,15 @@ func diag*[TT,N](a: RowVectorSpace[TT,N] or ColVectorSpace[TT,N]): MatrixSpace[T
 func diag*[TT,N](a: MatrixSpace[TT,N,N]): RowVectorSpace[TT,N] =
     for n in 0..<N:
         result.entries[n] = a[n,n]
-func embed*[M](a: auto):M =
-    for n in 0..<min(M.N,M.M):
-        result[n,n] = a
 
 func zero*[TT,N,M](R:typedesc[MatrixSpace[TT,N,M]]):R =
-    embed[R](zero(typeof(TT)))
+    for i in 0..<N*M:
+        result.entries[i] = R.zero
 func one*[TT,N](R:typedesc[MatrixSpace[TT,N,N]]):R =
-    embed[R](one(typeof(TT)))
+    for i in 0..<N*N:
+        result.entries[i] = TT.zero
+    for n in 0..<N:
+        result[n,n] = TT.one
     
 
 #ARITHMETICS
@@ -273,8 +274,8 @@ func isRegular*[TT,N,M](a: MatrixSpace[TT,N,M]):bool =
     when N != M: return false
     when N == M:
         return a.rankAtLeast N
-func isRegular*[TT,N,M](a: MatrixSpace[TT,N,M]):bool =
-    a.isInvertible
+func isInvertible*[TT,N,M](a: MatrixSpace[TT,N,M]):bool =
+    a.isRegular
 
 func inv*[TT,N](a: MatrixSpace[TT,N,N]):MatrixSpace[TT,N,N] =
     discard #TODO
