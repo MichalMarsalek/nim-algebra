@@ -25,6 +25,9 @@ type FiniteField* = concept type T
     T is BinaryField or T is GenFiniteField #| PrimeField
 
 #BINARY FIELD
+func `$`*[DEG, MOD, V](R:typedesc[BinaryField[DEG, MOD, V]]):string =
+    "GF(2^" & $DEG & ", " & $V & ")"
+
 template zero*[DEG, MOD, V](R:typedesc[BinaryField[DEG, MOD, V]]):R = R 0'u64
 template one*[DEG, MOD, V](R:typedesc[BinaryField[DEG, MOD, V]]):R = R 1'u64
 template gen*[DEG, MOD, V](R:typedesc[BinaryField[DEG, MOD, V]]):R = R 2'u64
@@ -108,6 +111,8 @@ func norm*[DEG,MOD,V](a: BinaryField[DEG,MOD,V]):BinaryField[DEG,MOD,V] =
 #GENERAL FIELD
 
 discard """
+func `$`*[P, DEG, MOD, V](R:typedesc[GenFiniteField[P, DEG, MOD, V]]):string =
+    "GF(" & $P & "^" & $DEG & ", " & $V & ")"
 template zero*(R:typedesc[GenFiniteField]):R = discard
 template one*(R:typedesc[GenFiniteField]):R = result.coeffs[0] = 1
 template gen*(R:typedesc[GenFiniteField]):R = result.coeffs[1] = 1
@@ -223,10 +228,11 @@ macro GF*(cardinality:typed,variable="α"):typedesc =
 
 when isMainModule:
     type F = GF(16,"α")
+    echo F
     const x = F.gen
     let a:F = F 0b111 #α^2 + α + 1
     let b:F = F 0b1011 #α^3 + α + 1
     echo $a
-    echo x^2 + x + 1
+    echo x^2 + x + F.one
     for e in GF(2^3,"X"):
         echo (e, trace e)

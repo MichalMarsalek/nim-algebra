@@ -17,6 +17,9 @@ type ZZMod*[M: static ZZ] = distinct ZZ
 template `/`*(T:typedesc[ZZ],m:int):typedesc =
     ZZMod[m]
 
+func `$`*[M](R:typedesc[ZZMod[M]]):string =
+    "ZZ/(" & $M & ")"
+
 template zero*(_:typedesc[RR]):RR = 0.0
 template one*(_:typedesc[RR]):RR = 1.0
 template zero*(_:typedesc[CC]):CC = Complex(0.0,0.0)
@@ -98,6 +101,7 @@ iterator invertible*[M](R:typedesc[ZZMod[M]]):R =
 when isMainModule: 
     block:
         type ZZ5 = ZZ/(5)
+        echo ZZ5
         let a = ZZ5 3
         #let a= 3 + 5*ZZ
         let b = ZZ5 4

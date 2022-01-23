@@ -15,6 +15,13 @@ type AffineSpace*[V] = object
     translation: V
     empty: bool
 
+func `$`*[TT, N, M](R:typedesc[MatrixSpace[TT, N, M]]):string =
+    when M == 1:
+        $TT & "^" & $N
+    else:
+        $TT & "^(" & $N & ", " & $M & ")"
+
+
 #INDEXING
 func `[]=`*[TT;N,M:static int](a: var MatrixSpace[TT,N,M],n,m:int,val:TT) =
   a.entries[n+m*N] = val
@@ -83,7 +90,7 @@ func diag*[TT,N](a: MatrixSpace[TT,N,N]): RowVectorSpace[TT,N] =
 
 func zero*[TT,N,M](R:typedesc[MatrixSpace[TT,N,M]]):R =
     for i in 0..<N*M:
-        result.entries[i] = R.zero
+        result.entries[i] = TT.zero
 func one*[TT,N](R:typedesc[MatrixSpace[TT,N,N]]):R =
     for i in 0..<N*N:
         result.entries[i] = TT.zero
@@ -294,14 +301,16 @@ func ker*[TT,N,M](a: MatrixSpace[TT,N,M]):AffineSpace[RowVectorSpace[TT,M]] =
 
 when isMainModule:
     type M = ZZ^(3,2)
+    echo M
+    echo ZZ^7
     let m:M = [[1,2],[33,4],[5,6]]
     dump m
     dump m.T
     dump m.T * m
     dump m * m.T
-    dump (m * m.T)^2
-    let G = (m * m.T)^2
-    dump G.diag.diag
+    #dump (m * m.T)^2
+    #let G = (m * m.T)^2
+    #dump G.diag.diag
 
     type V = ZZ^(1,3)
     let v:V = [1,2,3]

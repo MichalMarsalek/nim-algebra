@@ -60,6 +60,7 @@ Functions:
 * [x] `divisors(a:ZZ)` - iterator over all positive divisors
 * [x] `positive(ZZ)` - iterator over all positive elements
 * [x] `primes(ZZ)` - iterator over all (positive) primes
+* [x] `isPrime(a:ZZ)` - checks whether `a` is a prime
 * [x] `items(ZZ/(n))` - iterator over all elements
 * [x] `nonzero(ZZ/(n))` - iterator over all nonzero elements
 * [x] `invertible(ZZ/(n))` - iterator over all invertible elements
@@ -206,9 +207,6 @@ let v:V = [1,2,3]
 dump v
 dump v.T
 ```
-
-
-## Some prime stuff, mainly to support the above  
 
 ## Maybe some groups
 * [ ] Probably mainly finitely generated abelian groups  
