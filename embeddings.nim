@@ -96,31 +96,33 @@ template `*`[T1,T2:Embeddable](a:T1, b:T2):untyped =
     elif compiles(b.embed(typeof(a))):
         a * b.embed(typeof(a))
     else:
-        raise newException(Exception, "Cannot embed " & $T1 & " in " & $T2 & " nor vice versa.")
+        {.error: "Cannot embed " & $a & " in " & $typeof(b) & " nor " & $b & " in " & $typeof(a) & "."}
 template `/`[T1,T2:Embeddable](a:T1, b:T2):untyped =
     when compiles(a.embed(typeof(b))):
         a.embed(typeof(b)) / b
     elif compiles(b.embed(typeof(a))):
         a / b.embed(typeof(a))
     else:
-        raise newException(Exception, "Cannot embed " & $T1 & " in " & $T2 & " nor vice versa.")
+        {.error: "Cannot embed " & $a & " in " & $typeof(b) & " nor " & $b & " in " & $typeof(a) & "."}
 template `+`[T1,T2:Embeddable](a:T1, b:T2):untyped =
     when compiles(a.embed(typeof(b))):
         a.embed(typeof(b)) + b
     elif compiles(b.embed(typeof(a))):
         a + b.embed(typeof(a))
     else:
-        raise newException(Exception, "Cannot embed " & $T1 & " in " & $T2 & " nor vice versa.")
+        {.error: "Cannot embed " & $a & " in " & $typeof(b) & " nor " & $b & " in " & $typeof(a) & "."}
 template `-`[T1,T2:Embeddable](a:T1, b:T2):untyped =
     when compiles(a.embed(typeof(b))):
         a.embed(typeof(b)) - b
     elif compiles(b.embed(typeof(a))):
         a - b.embed(typeof(a))
     else:
-        raise newException(Exception, "Cannot embed " & $T1 & " in " & $T2 & " nor vice versa.")
+        {.error: "Cannot embed " & $a & " in " & $typeof(b) & " nor " & $b & " in " & $typeof(a) & "."}
     
 
 when isMainModule:
     type R = PR(ZZ, x,y,z,w)
     echo 2 + 3*x + 5*y
     echo x*y + 4*y - 58*x^2 * w
+    echo (1 + sqrt(- 2)).embed(CC)
+    let a = sqrt(3) + sqrt(5)
