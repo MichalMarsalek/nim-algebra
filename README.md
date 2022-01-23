@@ -161,7 +161,7 @@ Functions:
 * [x] `R/(f)` - rings factorized by a principal ideal `I(f)`
 
 Notes:  
-Only factors of polynomial rings are supported. Only main ideals are currently supported.
+Only factors of polynomial rings are supported. Only principal ideals are currently supported.
 
 ## Vectors & Matrices
 Types:  

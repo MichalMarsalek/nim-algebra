@@ -37,7 +37,7 @@ func cols*[TT;N,M:static int](a: var MatrixSpace[TT,N,M],m:int):ColVectorSpace[T
     result.entries[n] = a.entries[n+m*N]
 
 #PRINTING
-func toString[TT;N,M:static int](a:MatrixSpace[TT,N,M], line1Offset = 0): string =
+func toString*[TT;N,M:static int](a:MatrixSpace[TT,N,M], line1Offset = 0): string =
     when M == 1:
         return $a.T & "^T"
     var maxLengths = toSeq(0..<M).map(m => toSeq(0..<N).map(n => ($a[n,m]).len).max)
@@ -45,13 +45,13 @@ func toString[TT;N,M:static int](a:MatrixSpace[TT,N,M], line1Offset = 0): string
         n => " ".repeat(if n > 0: line1Offset else: 0) & "[" &
              map(toSeq(0..<M),
                  m => ($a[n,m]).align(maxLengths[m])
-             ).join(" ") & "]"
+             ).join(spaces(max(1,maxLengths.max div 5))) & "]"
     ).join "\n"
     
 func `$`*[TT;N,M:static int](a:MatrixSpace[TT,N,M]):string =
   a.toString
 
-macro dump(a:MatrixSpace) =
+macro dump*(a:MatrixSpace) =
     let name = $a.toStrLit & " = "
     quote do:
         echo `name` & `a`.toString(`name`.len)
@@ -65,17 +65,17 @@ func `$`*[V](s:AffineSpace[V]):string =
     result &= " + " & $s.translation
 
 #TYPE CREATION & CONVERSIONS
-template `^`(T:typedesc,k:int):typedesc =
+template `^`*(T:typedesc,k:int):typedesc =
     ColVectorSpace[T,k]
-template `^`(T:typedesc,k:(int,int)):typedesc =
+template `^`*(T:typedesc,k:(int,int)):typedesc =
     MatrixSpace[T,k[0],k[1]]
 
-converter arrayToRowVector[TT;N:static int](a:array[N,TT]):RowVectorSpace[TT,N] =
+converter arrayToRowVector*[TT;N:static int](a:array[N,TT]):RowVectorSpace[TT,N] =
   result.entries = a
-converter arrayToColVector[TT;N:static int](a:array[N,TT]):ColVectorSpace[TT,N] =
+converter arrayToColVector*[TT;N:static int](a:array[N,TT]):ColVectorSpace[TT,N] =
   result.entries = a
 
-converter array2DtoMatrix[TT;N,M:static int](a:array[N,array[M,TT]]):MatrixSpace[TT,N,M] =
+converter array2DtoMatrix*[TT;N,M:static int](a:array[N,array[M,TT]]):MatrixSpace[TT,N,M] =
   for n in 0..<N:
     for m in 0..<M:
       result[n,m] = a[n][m]
@@ -193,9 +193,9 @@ func norm*[TT,N](a: RowVectorSpace[TT,N] or ColVectorSpace[TT,N],p:static[int]=2
 
 
 #RANDOM and ENUMERATION
-func random*[TT,N,M](R:typedesc[MatrixSpace[TT,N,M]]):R =
+proc random*[TT,N,M](R:typedesc[MatrixSpace[TT,N,M]]):R =
     for i in 0..<N*M:
-        result.entries[i] = R.random
+        result.entries[i] = TT.random
 
 iterator items*[TT,N,M](R:typedesc[MatrixSpace[TT,N,M]]):R =
     discard

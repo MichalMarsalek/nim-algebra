@@ -1,38 +1,5 @@
-import sequtils
+import sequtils, sugar
 import numbers, quadratic_extensions, finite_fields, matrices, polynomials, factor_rings
-#[
-EMBEDDINGS = [
-  #Numbers
-  [int, ZZ]
-  
-  [QQ, RR, CC],
-  [QQQ[?D], CC],
-  [ZZQ[?D], CC],
-  [ZZ, ZZMod[?M]],
-  [int, intMod[?M]],
-  #Finite rings
-  [ZZ, BinaryField[?DEG,?MOD,?V]]
-  [ZZ, GenFiniteField[?P,?DEG,?MOD,?V]]
-  #Polynomials
-  [?D, PolynomialRing[?D]],
-  [PolynomialRing[?T1,?V],PolynomialRing[?T2,?V]] #TODO
-  #Factor rings
-  [?R, FactorRing[?R,?C]]
-  #Matrices
-  [MatrixSpace[?T1],MatrixSpace[?T2]] #TODO
-]#
-  
-  
-const MAX_EMBED_DEPTH = 10
-#[
-val.embed(T) atomic embed
-val.embed(T1,T2,T3) ---> val.embed(T1).embed(T2).embed(T3)
-
-a:T + b:S --> 
-    add(a.embed(path,path,S), b)
-    or
-    add(a, b.embed(path,path,T))
-]#
 
 #Numbers
 func embed*(a:ZZ, _:typedesc[QQ]):QQ =
@@ -46,6 +13,9 @@ func embed*[D](a:QQQ[D], _:typedesc[CC]):CC     =
 func embed*[D](a:ZZQ[D], R:typedesc[QQQ[D]]):R     =
     result.x = a.x.embed(QQ)
     result.y = a.y.embed(QQ)
+
+func embed*[M](a:ZZ, R:typedesc[ZZMod[M]]):R =
+    R a
 
 func embed*(a:ZZ, _:typedesc[RR]):RR =
     a.embed(QQ).embed(RR)
@@ -68,7 +38,8 @@ func embed*[T1,T2,V](a:T1,R:typedesc[PolynomialRing[T2,V]]):R =
 
 #Matrices
 func embed*[T1,T2,M,N](a:MatrixSpace[T1,M,N],R:typedesc[MatrixSpace[T2,M,N]]):R =
-    result.entries = a.entries.mapIt(it.embed(T2))
+    for i in 0..<M*N:
+        result.entries[i] = a.entries[i].embed(T2)
 
 #FiniteFields
 func embed*[DEG,MOD, V](a:int,R:typedesc[BinaryField[DEG,MOD, V]]):R =
@@ -87,7 +58,7 @@ func embed*[T1,T2,C](a:T1,R:typedesc[FactorRing[T2,C]]):R =
     result.val = a.embed(T2)
 
 type Embeddable = concept type T
-    T is Number or T is PolynomialRing or T is FiniteField or T is ZZQ or T is QQQ or T is FactorRing
+    T is Number or T is PolynomialRing or T is FiniteField or T is ZZQ or T is QQQ or T is FactorRing or T is MatrixSpace
 
 #TODO avoid duplicities
 template `*`[T1,T2:Embeddable](a:T1, b:T2):untyped =
@@ -125,5 +96,12 @@ when isMainModule:
     echo 2 + 3*x + 5*y
     echo x*y + 4*y - 58*x^2 * w
     echo (1 + sqrt(- 2)).embed(CC)
-    type R2 = PR(GF(16),X)/X
+    type R2 = (PR(GF(16, "beta"),X)/X)^3
     echo R2
+    type R3 = GF(16, "b")^(3,3)
+    echo R3.random
+    let m = ((ZZ/10)^(3,3)).random
+    dump m
+    let v = (ZZ^3) [11,12,13]
+    let mshift = m + diag(v)
+    dump mshift

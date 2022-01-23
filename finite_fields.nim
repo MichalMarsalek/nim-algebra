@@ -26,7 +26,7 @@ type FiniteField* = concept type T
 
 #BINARY FIELD
 func `$`*[DEG, MOD, V](R:typedesc[BinaryField[DEG, MOD, V]]):string =
-    "GF(2^" & $DEG & ", " & $V & ")"
+    "GF(2^" & $DEG & (if V != "α": ", " & V else: "") & ")"
 
 template zero*[DEG, MOD, V](R:typedesc[BinaryField[DEG, MOD, V]]):R = R 0'u64
 template one*[DEG, MOD, V](R:typedesc[BinaryField[DEG, MOD, V]]):R = R 1'u64

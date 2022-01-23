@@ -82,7 +82,7 @@ func `/`*[M](a,b: ZZMod[M]):ZZMod[M] {.inline.} =
 func `/=`*[M](a: var ZZMod[M], b: ZZMod[M]) {.inline.} =
     a = a * b.inv
 
-func random*[M](R:typedesc[ZZMod[M]]):R =
+proc random*[M](R:typedesc[ZZMod[M]]):R =
     const mx = M-1
     R rand(mx)
 
