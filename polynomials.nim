@@ -7,6 +7,8 @@ import algos, factorisations
 type PolynomialRing*[TT; V:static string] = object
     coeffs*:seq[TT]
 
+#TODO replace PR(R,x,y) with R+[x,y]
+
 template `$`*(T:typedesc[PolynomialRing]):string =
   var inner = $T.TT
   if inner.startsWith "PR(":

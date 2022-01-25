@@ -1,102 +1,30 @@
-include prelude, rationals, complex, integers
+include prelude, complex, integers
+import fractions, factor_rings, quadratic_extensions
 import sugar
 import algos
-import random, algorithm
 
 type RR* = float   #this is only temporary
 type CC* = Complex[float] #this is only temporary
-type QQ* = Rational[ZZ]
-type Number* = ZZ | QQ | RR | CC
-
-func `$`*(x:QQ):string =
-    if x.den == 1: return $x.num
-    return $x.num & "/" & $x.den
-
-type ZZMod*[M: static ZZ] = distinct ZZ
-
-template `/`*(T:typedesc[ZZ],m:int):typedesc =
-    ZZMod[m]
-
-func `$`*[M](R:typedesc[ZZMod[M]]):string =
-    "ZZ/(" & $M & ")"
 
 template zero*(_:typedesc[RR]):RR = 0.0
 template one*(_:typedesc[RR]):RR = 1.0
 template zero*(_:typedesc[CC]):CC = Complex(0.0,0.0)
 template one*(_:typedesc[CC]):CC = Complex(1.0,0.0)
-template zero*(_:typedesc[QQ]):QQ = 0//1
-template one*(_:typedesc[QQ]):QQ = 1//1            
 
-# ZZ/(n)
-template zero*[M](R:typedesc[ZZMod[M]]):R =
-    R 0
-template one*[M](R:typedesc[ZZMod[M]]):R =
-    R 1
-func card*[M](_:typedesc[ZZMod[M]]):int =
-    M
+type QQ* = ZZ/ZZ
 
-func `$`*[M](a: ZZMod[M]):string =
-    $a.ZZ
+type ZZMod*[M: static ZZ] = ZZ/M
+type intMod*[M: static int] = int/M
 
-func `+`*[M](a,b: ZZMod[M]):ZZMod[M] {.inline.} =
-    ZZMod[M]((a.ZZ + b.ZZ) mod M)
-func `+=`*[M](a: var ZZMod[M], b: ZZMod[M]) {.inline.} =
-    a = a + b
-func `-`*[M](a,b: ZZMod[M]):ZZMod[M] {.inline.} =
-    ZZMod[M]((a.ZZ - b.ZZ) mod M)
-func `-=`*[M](a: var ZZMod[M], b: ZZMod[M]) {.inline.} =
-    a = a - b
-func `*`[M](a,b: ZZMod[M]):ZZMod[M] {.inline.} =
-    ZZMod[M]((a.ZZ * b.ZZ) mod M)
-func `*=`*[M](a: var ZZMod[M], b: ZZMod[M]) {.inline.} =
-    a = a * b
+type ZZQ*[D:static ZZ] = QuadraticExtension[ZZ, D]
+type ZZ_i* = ZZQ[initZZ(-1)]
+type QQQ*[D:static QQ] = QuadraticExtension[QQ, D]
+type QQ_i* = QQQ[initFrac(initZZ(-1),initZZ(-1))]
 
-func inv*[M](a0: ZZMod[M]): ZZMod[M] = ##TODO make this use ZZ
-    var (a, b, x0) = (a0.int, M, 0)
-    var res = 1
-    while a > 1:
-        res = res - (a div b) * x0
-        a = a mod b
-        swap a, b
-        swap x0, res
-    if res < 0: res += M
-    return ZZMod[M] res
+func `/`*[D](_,_:typedesc[ZZQ[D]]):typedesc =
+   QQQ[D]
 
-func `^`*[M](a:ZZMod[M], exp:int): ZZMod[M] =
-    func binaryExponentiation[T](value:T, exp:int):T =
-        result = one(T)
-        var intermediate = value
-        var exp1 = exp
-        while exp1 > 0:
-            if exp1 mod 2 == 1:
-                result *= intermediate
-            intermediate *= intermediate
-            exp1 = exp1 shr 1
-    if exp < 0:
-        binaryExponentiation(a.inv, -exp)
-    else:
-        binaryExponentiation(a, exp)
-
-func `/`*[M](a,b: ZZMod[M]):ZZMod[M] {.inline.} =
-    a * b.inv
-func `/=`*[M](a: var ZZMod[M], b: ZZMod[M]) {.inline.} =
-    a = a * b.inv
-
-proc random*[M](R:typedesc[ZZMod[M]]):R =
-    const mx = M-1
-    R rand(mx)
-
-iterator items*[M](R:typedesc[ZZMod[M]]):R =
-    for i in 0..<M:
-        yield R i
-iterator nonzero*[M](R:typedesc[ZZMod[M]]):R =
-    for i in 1..<M:
-        yield R i
-iterator invertible*[M](R:typedesc[ZZMod[M]]):R =
-    for i in 1..<M:
-        if gcd(M,i) == 1:
-            yield R i
-
+type Number* = int | ZZ | QQ | RR | CC | ZZi | QQi #TODO
 
 when isMainModule: 
     block:

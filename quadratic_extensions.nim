@@ -1,20 +1,23 @@
 include prelude
-import numbers
 import sugar, macros, math
-import algos
 
-type ZZQ*[D:static ZZ] = object
-    x*:ZZ
-    y*:ZZ
-type ZZ_i* = ZZQ[-1]
-type QQQ*[D:static ZZ] = object
-    x*:QQ
-    y*:QQ
-type QQ_i* = QQQ[-1]
+type QuadraticExtension*[T; D:static T] = object
+    x: T
+    y: T
 
 # ZZQ[D] ARITMETHICS & PRINTING
-template zero*[D:static ZZ](R:typedesc[ZZQ[D]]):R = discard
-template one*[D:static ZZ](R:typedesc[ZZQ[D]]):R = (x:one(ZZ), y:zero(ZZ))
+template zero*[T,D](R:typedesc[QuadraticExtension[T,D]]):R =
+    result.x = T.zero
+    result.y = T.zero
+template one*[T,D](R:typedesc[QuadraticExtension[T,D]]):R =
+    result.x = T.one
+    result.y = T.zero
+template sqrt*[T](a:static TT):QuadraticExtension[T,a] =
+    result.x = T.zero
+    result.y = T.one
+    
+#TODO rest of file
+
 func `$`*[D:static ZZ](a:ZZQ[D]):string =
     when D == -1:
         return replace($a.x & " + " & $a.y & "i", "+ -", "- ")

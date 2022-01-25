@@ -205,9 +205,9 @@ func factorPower*(c:int):(int,int) =
             while car > 1:
                 car = car div p
                 inc d
-            break
+            return (p,d)
         if q*q > car: break
-    return (p,d)
+    return (car, 1)
 
 func asarray(x:seq[int],d:static int):array[d, int] =
     for i in 0..<d:

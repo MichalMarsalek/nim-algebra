@@ -1,5 +1,5 @@
 import sequtils, sugar
-import numbers, quadratic_extensions, finite_fields, matrices, polynomials, factor_rings
+include numbers, quadratic_extensions, finite_fields, matrices, polynomials, factor_rings
 
 #Numbers
 func embed*(a:ZZ, _:typedesc[QQ]):QQ =
@@ -60,6 +60,8 @@ func embed*[T1,T2,C](a:T1,R:typedesc[FactorRing[T2,C]]):R =
 type Embeddable = concept type T
     T is Number or T is PolynomialRing or T is FiniteField or T is ZZQ or T is QQQ or T is FactorRing or T is MatrixSpace
 
+type Ring = Embeddable #TODO
+
 #TODO avoid duplicities
 template `*`[T1,T2:Embeddable](a:T1, b:T2):untyped =
     when compiles(a.embed(typeof(b))):
@@ -89,6 +91,23 @@ template `-`[T1,T2:Embeddable](a:T1, b:T2):untyped =
         a - b.embed(typeof(a))
     else:
         {.error: "Cannot embed " & $typeof(a) & " in " & $typeof(b) & " nor " & $typeof(b) & " in " & $typeof(a) & "."}
+
+func `^`*(value:Ring, exp:int|ZZ):typeof(value) =
+    result = typeof(value).one
+    var intermediate = value
+    var exp1 = exp
+    while exp1 > 0:
+        if exp1 mod 2 == 1:
+            result *= intermediate
+        intermediate *= intermediate
+        exp1 = exp1 shr 1
+
+func `/`*(a,b:Ring):typeof(value) =
+    a * b.inv
+
+func `//`*(a,b:Ring):(typeof(a)/typeof(a)) =
+    type FR = (typeof(a)/typeof(a))
+    a.embed(FR) / b.embed(FR)
     
 
 when isMainModule:
