@@ -6,24 +6,45 @@ The central design decision is that each mathematical structure (ring, field, ve
 
 # Features
 
-This package implements various common algebraic structures, namely:  
-* Number rings and fields
-* Matrices and linear algebra
-* Finite fields
-* Polynomial rings
-* Factorrings
+This package implements:
+* Commutative rings and fields:
+  * 64bit approximations of Real and Complex numbers
+  * Integers, Rationals and their quadratic extensions
+  * Finite fields
+  * Polynomials
+  * General field of fractions
+  * General factor rings
+* Linear algebra
+  * Vectors
+  * Matrices
+  * Vector spaces
+* Finitely generated abelian groups
 
-The following is available for all rings `R` and all `a,b` in `R`, `k` in `ZZ`:  
+and basic operations and algorithms on those structures.
+
+## Common ring functions
+The following operators/functions are available for a ring `R` and `a,b` in `R`, `k` in `ZZ`. Note that some of the functions might not make sense for a particular ring.
+* `zero R` - returns a zero of the ring,
+* `one R` - returns a one of the ring,
+* `gen R` - returns a generator of the ring,
+* `a.inv` - returns an inverse of a. Raises ElementNotInvertibleError for noninvertible elements,  
+* `isInvertible a` - indicates whether `a` is invertible,
+* `-a, a+b, a-b, a*b, a/b, a^k` - common arithmetic operations
+* `a mod b`,`a div b` - floored Euclidean division
+* `a//b` - division in the field of fractions
 * `card R` - cardinality of the ring. Raises InfiniteCardinalityError for infinite rings,
-* `items R` - iterates over all elements of the ring,
+* `items R` - iterates over all elements of the ring. Raises UncountableCardinalityError for uncountable rings.
 * `nonzero R` - iterates over all nonzero elements of the ring,
 * `invertible R` - iterates over all invertible elements of the ring,
 * `random R` - returns a random element. Raises InfiniteCardinalityError for infinite rings,
-* `zero R` - returns a zero of the ring,
-* `one R` - returns a one of the ring,
-* `isInvertible a` - indicates whether `a` is invertible,
-* `a.inv` - returns an inverse of a. Raises ElementNotInvertibleError for noninvertible elements,
-* `-a, a+b, a-b, a\*b, a/b, a^k` - common arithmetic operations
+* `divisors a` - iterator over all positive divisors
+* `positive R` - iterator over all positive elements
+* `primes R` - iterator over all (positive) primes
+* `isPrime a` - checks whether `a` is a prime
+* `isIrreducible a` - checks whether `a` is irreducible
+* `factor a` - factors into irreducible factors
+* `gcd(a, b)` - greatest common divisor
+* `egcd(a, b)` - Bezout coefficients using the Extended Euclidean algorithm
 
 ## Embeddings /implicit conversions
 In usual mathematical notation many embeddings are implicit, for example we usualy doesn't distinquish between `1` as an integer, as a complex number of as a constan polynomial over the rationals. In a programming language all of the above are different things (different types) but they must be compatible when using the usual arithmetic operations. For example, when we type
@@ -41,52 +62,42 @@ All the three cases need to work in combination with each other (it must support
 
 ## Number rings & fields
 Types:  
-* [x] `ZZ` - integers
-* [x] `QQ` - rational numbers
-* [x] `RR` - real numbers
-* [x] `CC` - complex numbers
+* [x] `int` - integers modulo 2^64 (TODO ops)
+* [x] `RR, CC` - (approximate) real and complex numbers
+* [x] `ZZ, QQ` - integers and rationals
 * [x] `ZZ/(n)` - integers mod n
 * [x] `ZZQ[d]` - quadratic extension of integers
 * [x] `ZZ_i` - Gaussian integers - alias for `ZZQ[-1]`
 * [x] `QQQ[d]` - quadratic extension of rationals
 * [x] `QQ_i` - alias for `QQQ[-1]`
 
-Functions:  
-* [x] Usual arithmetic operations
-* [x] `gcd` - greatest common divisor over `ZZ`
-* [ ] `egcd` - Bezout coefficients over `ZZ` using the Extended Euclidean algorithm
-* [ ] Modular arithmetic goodies - CRT, Jacobi symbols, euler totient function etc.
-* [x] `random(ZZ/(n))` - random element
-* [x] `divisors(a:ZZ)` - iterator over all positive divisors
-* [x] `positive(ZZ)` - iterator over all positive elements
-* [x] `primes(ZZ)` - iterator over all (positive) primes
-* [x] `isPrime(a:ZZ)` - checks whether `a` is a prime
-* [x] `items(ZZ/(n))` - iterator over all elements
-* [x] `nonzero(ZZ/(n))` - iterator over all nonzero elements
-* [x] `invertible(ZZ/(n))` - iterator over all invertible elements
+Additional functions:  
+* [x] Euler totient function
+* [ ] Modular arithmetic goodies - CRT, Jacobi symbols...
+* [x] `sqrt(d)` - returns the generator of `ZZQ[d]` that is not `1`. `i` is written as `sqrt(-1)`
 
 Supported embeddings:  
 * `int` -> `ZZ` -> `QQ` -> `RR` -> `CC`
 * `QQQ[d]` -> `CC`
 * `ZZQ[d]` -> `CC`
 * `ZZ` -> `ZZ/(n)`
-* `ZZ_i` -> `CC`
 
+Examples:  
+```nim
+let a = 2 + 3*sqrt(5)   # 2 + 3√5
+let b = 3//4 + 2*sqrt(-1) # ¾ + 2i
+```
 
 ## Finite fields
 Types:  
 * [x] `GF(p^k)` - Galois field of cardinality p^k
 
-Functions:  
-* Usual arithmetic operations
+Additional functions:  
 * [ ] `trace`
 * [ ] `norm`
-* [ ] `random` - random element
-* [ ] `items` - iterator over all elements
-* [ ] `nonzero`/`invertible` - iterator over all nonzero elements
 
 Supported embeddings:  
-`ZZ` -> `GF(p,k)`
+`int` -> `ZZ` -> `ZZ/(n)` -> `GF(p,k)`
 
 Examples:  
 ```nim
@@ -104,29 +115,21 @@ Binary fields of size <= 2^64 have a special optimized implementation.
 
 ## Polynomial rings
 Types:  
-* [x] `PR(R,x)` - polynomial ring in variable `x` over the base ring `R`
-* [x] `PR(R,x,y,z)` - multivariate polynomials over the base ring `R`
+* [x] `R+[x]` - polynomial ring in variable `x` over the base ring `R`
+* [x] `R+[x,y,z]` - multivariate polynomials over the base ring `R`
 
 Functions:  
 * [x] Usual arithmetic operations
 * [x] `deg` - degree
 * [ ] `roots` - done for ZZ,QQ
-* [ ] `gcd` - greatest common divisor
-* [ ] `egcd` - Bezout coefficients using the Extended Euclidean algorithm
-* [ ] `random(d)` - random polynomial with max degree `d` (over finite rings)
-* [ ] `items` - iterator over all elements (over finite rings)
-* [ ] `nonzero` - iterator over all nonzero elements (over finite rings)
-* [ ] `invertible` - iterator over all invertible elements (over finite rings)
-* [ ] maybe common poly algos - factoring etc.
 
 Supported embeddings:  
-* `R` -> `PR(R,...)`
-* `ZZ` -> `PR(R,...)` where `R` is in {`QQ`, `RR`, `CC`, `ZZ/(n)`, `GF(p)`}
+* `R` -> `R+[...]`
 
 Examples:  
 ```nim
-type R = PR(ZZ,x) # this defines the poly ring and binds the generator to the variable x
-type S = PR(ZZ,y)
+type R = ZZ+[x] # this defines the poly ring and binds the generator to the variable x
+type S = ZZ+[y]
 let f = x^2 + x + 1
 echo f
 echo f("w") # substituting a different variable
@@ -137,31 +140,26 @@ echo f(y)   # substituting a different variable
 
 Notes:  
 Multivariate polynomials are internally represented as polynomials in the last variable with coefficents being polynomials in the rest of the variables.
-This means that `PR(PR(QQ,x),y)` is the same as `PR(QQ,x,y)`.
-The order of variables matter. `PR(QQ,x,y)` is not compatible with `PR(QQ,y,x)`.  
+This means that `QQ+[x]+[y]` is the same as `QQ+[x,y]`.
+The order of variables matter. `QQ+[x,y]` is not compatible with `QQ+[y,x]`.  
 The `roots` returns only the roots in the field/ring. If you wish to find all the roots, search in an extension.
 
 ## Ideals & Factor Rings
 Types:  
 * [x] `Ideal[R]` - a finitely generated ideal in a ring `R`
 * [x] `R/I` - ring `R` factorized by and ideal `I`
-* [ ] `random` - random element
-* [ ] `items` - iterator over all elements
-* [ ] `nonzero` - iterator over all nonzero elements
-* [ ] `invertible` - iterator over all invertible elements
+
+Additional functions:  
+* [x] `I(f)` - principal ideal generated by polynomial `f`
+* [x] `R/(f)` - ring factorized by a principal ideal `I(f)`
 
 Supported embeddings:  
 * `R` -> `R/I`
 * `R` -> `PR(R,...)/I`
 * `ZZ` -> `PR(R,...)/I` where `R` is in {`QQ`, `RR`, `CC`, `ZZ/(n)`, `GF(p)`}
 
-Functions:  
-* [x] Usual arithmetic operations
-* [x] `I(f)` - principal ideal generated by polynomial `f`
-* [x] `R/(f)` - rings factorized by a principal ideal `I(f)`
-
 Notes:  
-Only factors of polynomial rings are supported. Only principal ideals are currently supported.
+Only principal ideals are currently supported.
 
 ## Vectors & Matrices
 Types:  
