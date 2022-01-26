@@ -1,9 +1,18 @@
 import factorisations, algorithm, bitops, math, tables
+import errors
 import times
 
 type ZZ* = int     #this is only temporary
 template zero*(_:typedesc[ZZ]):ZZ = 0
 template one*(_:typedesc[ZZ]):ZZ = 1
+
+func inv*(x:int):int =
+    ## Returns x^(-1) mod 2^64.
+	if x mod 2 == 0:
+		raiseInvertError(x)
+    result = x
+    for _ in 1..5:
+        result *= (2 - result*x)
 
 func gcd*(x,y:ZZ):ZZ =
     #TODO implement binary version
