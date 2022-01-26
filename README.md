@@ -75,6 +75,8 @@ Additional functions:
 * [x] Euler totient function
 * [ ] Modular arithmetic goodies - CRT, Jacobi symbols...
 * [x] `sqrt(d)` - returns the generator of `ZZQ[d]` that is not `1`. `i` is written as `sqrt(-1)`
+* [x] `conjugate(a)` - conjugate of quadratic extension element `a`
+* [x] `norm(a)` - norm of quadratic extension element `a`
 
 Supported embeddings:  
 * `int` -> `ZZ` -> `QQ` -> `RR` -> `CC`
@@ -118,10 +120,11 @@ Types:
 * [x] `R+[x]` - polynomial ring in variable `x` over the base ring `R`
 * [x] `R+[x,y,z]` - multivariate polynomials over the base ring `R`
 
-Functions:  
-* [x] Usual arithmetic operations
+Additional functions:  
 * [x] `deg` - degree
-* [ ] `roots` - done for ZZ,QQ
+* [x] `roots` - done for ZZ,QQ
+* [x] `lc` - leading coefficient
+* [x] `cc` - constant coefficient
 
 Supported embeddings:  
 * `R` -> `R+[...]`
@@ -160,6 +163,20 @@ Supported embeddings:
 
 Notes:  
 Only principal ideals are currently supported.
+
+## Field of fractions
+Types:  
+* [x] `R/R` - field of fractions of the ring `R` or `R` if `R` is a field
+
+Supported embeddings:  
+* `R` -> `R/R`
+
+Notes:  
+One can embed a division to the field of fractions using the `//` operator.  
+Note that `QQ` is just `ZZ/ZZ`. As a special rule, `int/int` is the same, while `ZZQ[D]/ZZQ[D]` is `QQQ[D]/QQQ[D]`.
+
+## Quadratic extensions
+There is a more optimized implementation of `(R+[x])/(x^2+D)`. This implementation is `QuadraticExtension[T, D]`. Altough it is generic, it probably is mostly useful for cases where `T` is `ZZ` or `QQ`, which is how `ZZQ[D]`and `QQQ[D]` is defined.
 
 ## Vectors & Matrices
 Types:  
