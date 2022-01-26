@@ -5,6 +5,8 @@ type Factorisation*[T] = object
   factors*: OrderedTable[T,int]
 
 func `$`*[T](x:Factorisation[T]):string =
+  if x.factors.len == 0:
+    return $x.unit
   if x.unit == T.one:
     discard
   elif x.unit == -T.one:
