@@ -25,25 +25,37 @@ func `$`*[T,D](a:QuadraticExtension[T,D]):string =
             return replace($a.x & " + " & $a.y & "√" & $D, "+ -", "- ")
 
 
-func `+`*[T,D](a,b:QuadraticExtension[T,D]):QuadraticExtension[T,D] =
+
+func conjugate*[T,D](a:QuadraticExtension[T,D]):QuadraticExtension[T,D] {.inline.} =
+    result.x = a.x
+	result.y = -a.y
+
+func norm*[T,D](a:QuadraticExtension[T,D]):T {.inline.} =
+    a.x*a.x - a.y*a.y*D
+func norm*(a:ZZi):ZZ {.inline.} =
+    a.x*a.x + a.y*a.y
+func norm*(a:QQi):QQ {.inline.} =
+    a.x*a.x + a.y*a.y
+
+func `+`*[T,D](a,b:QuadraticExtension[T,D]):QuadraticExtension[T,D] {.inline.} =
     result.x = a.x + b.x
     result.y = a.y + b.y
-func `+=`*[T,D](a:var QuadraticExtension[T,D], b:QuadraticExtension[T,D]):QuadraticExtension[T,D] =
+func `+=`*[T,D](a:var QuadraticExtension[T,D], b:QuadraticExtension[T,D]):QuadraticExtension[T,D] {.inline.} =
     a = a + b
-func `-`*[T,D](a,b:QuadraticExtension[T,D]):QuadraticExtension[T,D]  =
+func `-`*[T,D](a,b:QuadraticExtension[T,D]):QuadraticExtension[T,D] {.inline.} =
     result.x = a.x - b.x
     result.y = a.y - b.y
-func `-=`*[T,D](a:var QuadraticExtension[T,D], b:QuadraticExtension[T,D]):QuadraticExtension[T,D] =
+func `-=`*[T,D](a:var QuadraticExtension[T,D], b:QuadraticExtension[T,D]):QuadraticExtension[T,D] {.inline.} =
     a = a - b
-func `-`*[T,D](a:QuadraticExtension[T,D]):QuadraticExtension[T,D]  =
+func `-`*[T,D](a:QuadraticExtension[T,D]):QuadraticExtension[T,D] {.inline.} =
     result.x = -a.x
     result.y = -a.y
-func `*`*[T,D](a,b:QuadraticExtension[T,D]):QuadraticExtension[T,D]  =
+func `*`*[T,D](a,b:QuadraticExtension[T,D]):QuadraticExtension[T,D] {.inline.} =
     result.x = a.x * b.x + D * a.y * b.y
     result.y = a.y * b.x + a.x * b.y
-func `*=`*[T,D](a:var QuadraticExtension[T,D], b:QuadraticExtension[T,D]):QuadraticExtension[T,D] =
+func `*=`*[T,D](a:var QuadraticExtension[T,D], b:QuadraticExtension[T,D]):QuadraticExtension[T,D] {.inline.} =
     a = a * b
-func inv*[T,D](a:QuadraticExtension[T,D]):QuadraticExtension[T,D]  =
-    let den = a.x*a.x - a.y*a.y*D
+func inv*[T,D](a:QuadraticExtension[T,D]):QuadraticExtension[T,D] {.inline.} =
+    let den = a.norm
 	result.x = a.x / den
 	result.y = -b.x / den
