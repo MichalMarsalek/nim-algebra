@@ -7,15 +7,12 @@ import algos, factorisations
 type PolynomialRing*[TT; V:static string] = object
     coeffs*:seq[TT]
 
-#TODO replace PR(R,x,y) with R+[x,y]
-
 template `$`*(T:typedesc[PolynomialRing]):string =
-  var inner = $T.TT
-  if inner.startsWith "PR(":
-    inner = inner[3..^2]
-  "PR(" & inner & "," & T.V & ")"
-
-type Ring* = Number | PolynomialRing | FiniteField
+  result = $T.TT
+  if result.endsWith "]":
+    result = result[0..^2] & "," & T.V & "]"
+  else:
+    result &= "+[" & T.V & "]"
 
 func zero*[TT;V:static string](R:typedesc[PolynomialRing[TT, V]]):R =
     PolynomialRing[TT, V](coeffs: @[zero(typeof TT)])
@@ -26,7 +23,7 @@ func gen*[TT; V:static string](R:typedesc[PolynomialRing[TT, V]]):R =
     PolynomialRing[TT, V](coeffs: @[zero(typeof TT), one(typeof TT)])
 
 #Type construction macros
-macro PR*(R:typedesc[Ring],variables:varargs[untyped]):typedesc[PolynomialRing] =
+macro `+`*(R:typedesc,variables:untyped{nkBracket}):typedesc[PolynomialRing] =
     result = nnkStmtList.newTree
     var prevTypeSym, currTypeSym: NimNode
     prevTypeSym = R
@@ -245,13 +242,13 @@ func factor*[TT,V](f:PolynomialRing[TT,V]):Factorisation[typeof f] =
     
 
 when isMainModule:
-    type R = PR(ZZ,x)
+    type R = ZZ+[x]
     let f = R.one + x^2 + x
     echo f
     echo f("w")
     echo f(2)
     #echo f(x^2)
-    type RR = PR(ZZ, X,"Y",Z,W)
+    type RR = ZZ+[X,"Y",Z,W]
     echo RR
     
     
