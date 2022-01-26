@@ -106,7 +106,11 @@ func trace*[DEG,MOD,V](a: BinaryField[DEG,MOD,V]):BinaryField[DEG,MOD,V] =
         result += a
 
 func norm*[DEG,MOD,V](a: BinaryField[DEG,MOD,V]):BinaryField[DEG,MOD,V] =
-    discard #TODO
+    var a = a
+    result = a
+    for i in 2..DEG:
+        a = a*a
+        result *= a
 
 #GENERAL FIELD
 
@@ -194,9 +198,7 @@ func `$`[P,DEG,MOD,V](a: GenFiniteField[P,DEG,MOD,V]):string =
     if parts.len == 0: parts.add "0"
     parts.join(" + ")
 
-type Field* = QQ | RR | CC | FiniteField
-
-func factorPower*(c:int):(int,int) =
+func factorPower*(c:int):(int,int) =  #replace this with a faster algo    
     var p,d:int
     var car = c
     for q in 2..car:
@@ -220,7 +222,7 @@ macro GF*(cardinality:typed,variable="α"):typedesc =
     if cardinality.kind == nnkInfix:
         base = cardinality[1]
         exponent = cardinality[2]
-    result = quote do:  #replace this with a faster algo          
+    result = quote do:      
         const (p,d0) = factorPower `base`
         const d = d0 * `exponent`
         when p == 2 and d <= 64:
