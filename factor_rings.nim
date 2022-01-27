@@ -6,6 +6,11 @@ type FactorRing*[TT;M:static TT] = object
 func `$`*[TT,M](R:typedesc[FactorRing[TT,M]]):string =
     $TT & "/(" & $M & ")"
 
+func zero*[TT,M](R:typedesc[FactorRing[TT,M]]):R =
+    R(val: TT.zero)
+func one*[TT,M](R:typedesc[FactorRing[TT,M]]):R =
+    R(val: TT.one)
+
 type Ideal*[P] = object
     generator*: P
 
@@ -35,6 +40,10 @@ func `*`*[TT, M](f,g:FactorRing[TT,M]):FactorRing[TT, M] =
 
 func `$`*[TT, M](f:FactorRing[TT, M]):string =
     $f.val & " + I(" & $M & ")"
+func `$`*[M](f:FactorRing[int, M]):string =
+    "[" & $f.val & "]"
+func `$`*[M](f:FactorRing[ZZ, M]):string =
+    "[" & $f.val & "]"
 
 #temp for ZZ/(n)
 import options

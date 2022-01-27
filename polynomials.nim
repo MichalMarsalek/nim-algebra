@@ -105,7 +105,7 @@ func `$`*[TT; V:static string](f:PolynomialRing[TT, V]): string =
             else:
                 parts.add(fmt"{sc}{typ}")
     if parts.len == 0: return "0"
-    parts.reversed.join(" + ").replace("+ -","-")
+    parts.reversed.join(" + ").replace("+ -","- ")
 
 func normalize[TT,V](f: var PolynomialRing[TT,V]) =
     var i = deg(f)
@@ -273,3 +273,23 @@ func factor*[TT,V](f:PolynomialRing[TT,V]):Factorisation[typeof f] =
             result.factors[(x-a)] = exp
     if deg(f) > 0:
         result.factors[f] = 1
+
+#RANDOM & ITERATORS
+iterator items*[TT,V](R:typedesc[PolynomialRing[TT,V]]):R =
+    let base = toSeq items TT
+    var it = R.zero
+    var indeces = @[0]
+    while true:
+        yield it
+        inc indeces[0]
+        var i = 0
+        while i+1 < indeces.len and indeces[i] == base.len:
+            indeces[i] = 0
+            it.coeffs[i] = base[0]
+            inc indeces[i+1]
+            inc i
+        if indeces[^1] == base.len:
+            indeces[^1] = 0
+            indeces.add 1
+            it.coeffs.add base[1]
+        it.coeffs[i] = base[indeces[i]]

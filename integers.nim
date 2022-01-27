@@ -8,6 +8,7 @@ template initZZ*(x:typed):ZZ =
     initBigInt(x)
 template zero*(_:typedesc[ZZ]):ZZ = 0.initZZ
 template one*(_:typedesc[ZZ]):ZZ = 1.initZZ
+func `$`*(_:typedesc[ZZ]):string = "ZZ"
 
 #[
 func inv(x:uint64):uint64 =

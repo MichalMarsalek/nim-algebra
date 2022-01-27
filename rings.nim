@@ -127,6 +127,10 @@ when isMainModule:
     echo R2
     type R3 = GF(16, "b")^(3,3)
     echo R3.random
+    type R4 = ZZ/5+[x]
+    echo R4
+    for e in R4:
+        echo e
     #[
     let m = ((ZZ/10)^(3,3)).random
     dump m
