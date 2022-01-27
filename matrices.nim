@@ -139,12 +139,22 @@ func sum*[TT,N,M](a: MatrixSpace[TT,N,N]): TT =
 func trace*[TT,N,M](a: MatrixSpace[TT,N,N]): TT =
     sum a.diag.entries
 
-func rowEchelon*[TT,N,M](a: MatrixSpace[TT,N,M]):MatrixSpace[TT,N,M]
 func det*[TT,N](a: MatrixSpace[TT,N,N]): TT =
-    let ech = rowEchelon a #temporary TODO don't use division for det calc
-    result = ech[0,0]
-    for n in 1..<N:
-        result *= ech[n,n]
+	proc subdet(row:int8, cols: set[int8]): TT = #TODO support int16 indeces too
+		if row == N:
+			return TT.one
+		result = TT.zero
+		for c in cols:
+			if row + c mod 2'i8 == 0'i8
+				result += subdet(row+1, cols.excl(c))
+			else:
+				result -= subdet(row+1, cols.excl(c))
+	const cols = static:
+		var cols: set[int8]
+		for i in 0..<N:
+			cols.incl i.int8
+		cols
+	subdet(0,cols)
 
 #func charpoly*[TT,N](A: MatrixSpace[TT,N,N]):PolynomialRing[TT,"λ"] =
 #    discard #TODO
@@ -316,10 +326,10 @@ when isMainModule:
     let v:V = [1,2,3]
     dump v
     dump v.T
-    let U = span(v, V [0,0,1]) + V [0,1,0]
+    let U = span(v, Vec(0,0,1)) + Vec(0,1,0)
     echo $U
     
-    let m22:QQ^(2,2) = [[1//1,2//1],[1//1,1//1]]
+    let m22:QQ^(2,2) = Mat([1//1,2//1],[1//1,1//1])
     dump m22
     dump det m22
     
