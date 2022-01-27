@@ -2,6 +2,7 @@ include prelude
 import numbers, finite_fields
 import sugar, macros, math, algorithm
 import algos, factorisations
+import errors
 {.experimental: "callOperator".}
 
 type PolynomialRing*[TT; V:static string] = object
@@ -106,9 +107,6 @@ func `$`*[TT; V:static string](f:PolynomialRing[TT, V]): string =
     if parts.len == 0: return "0"
     parts.reversed.join(" + ").replace("+ -","-")
 
-func rename[TT,V1](f:PolynomialRing[TT,V1], V2: static string):PolynomialRing[TT,V2] =
-    PolynomialRing[TT,V2](f) #deprecate?
-
 func normalize[TT,V](f: var PolynomialRing[TT,V]) =
     var i = deg(f)
     while (i >= 0) and (f.coeffs[i] == zero TT):
@@ -184,6 +182,10 @@ func `()`*[TT,V,TT2](f:PolynomialRing[TT,V], val: TT2):TT2 =
     for i in countdown(deg f, 0):
         result = result * val + f.coeffs[i]
 
+func derivative*[TT,V](f:PolynomialRing[TT,V]):PolynomialRing[TT,V] =
+    for i in 1..deg(f):
+		result.coeffs.add f.coeffs[i] * (i-1)
+
 #ROOTS & FACTORING
 
 func roots*[V](f:PolynomialRing[ZZ,V]):seq[ZZ] =
@@ -223,6 +225,40 @@ func roots*[V](f:PolynomialRing[QQ,V]):seq[QQ] =
                 result.add x
             if f(-x) == zero(QQ):
                 result.add -x
+
+func roots*[V](f:PolynomialRing[RR,V]):seq[RR] =
+	import math
+    if f.deg == -1:
+		raiseInfiniteError(RR)
+	elif f.deg == 0:
+		return
+	elif f.deg == 1:
+		return -f.cc / f.lc
+	elif f.deg == 2:
+		let (a,b,c) = (f.entries[2], f.entries[1], f.entries[0])
+		let D = b*b - 4*a*c
+		if D < 0.0: return
+		if D == 0.0: return @[-b/(2.0*a)]
+		let sqrtD = sqrt D
+		return @[(-b+sqrtD)/(2.0*a), (-b-sqrtD)/(2.0*a)]
+	else:
+		assert false, "roots implemented for quadratic real polynomials"
+func roots*[V](f:PolynomialRing[CC,V]):seq[CC] =
+	import complex
+    if f.deg == -1:
+		raiseInfiniteError(CC)
+	elif f.deg == 0:
+		return
+	elif f.deg == 1:
+		return -f.cc / f.lc
+	elif f.deg == 2:
+		let (a,b,c) = (f.entries[2], f.entries[1], f.entries[0])
+		let D = b*b - 4*a*c
+		if D == complex(0.0, 0.0): return @[-b/(2.0*a)]
+		let sqrtD = sqrt D
+		return @[(-b+sqrtD)/(2.0*a), (-b-sqrtD)/(2.0*a)]
+	else:
+		assert false, "roots implemented for quadratic complex polynomials"
 
 func factor*[TT,V](f:PolynomialRing[TT,V]):Factorisation[typeof f] =
     #TODO this only factors out linear factors
