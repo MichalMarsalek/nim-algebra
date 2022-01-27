@@ -1,8 +1,6 @@
 include prelude
 import numbers
 import sugar, macros
-import algos
-import math
 #import polynomials
 
 type MatrixSpace*[TT; N, M:static int] = object
@@ -70,15 +68,9 @@ template `^`*(T:typedesc,k:int):typedesc =
 template `^`*(T:typedesc,k:(int,int)):typedesc =
     MatrixSpace[T,k[0],k[1]]
 
-converter arrayToRowVector*[TT;N:static int](a:array[N,TT]):RowVectorSpace[TT,N] =
-  result.entries = a
-converter arrayToColVector*[TT;N:static int](a:array[N,TT]):ColVectorSpace[TT,N] =
-  result.entries = a
-
-converter array2DtoMatrix*[TT;N,M:static int](a:array[N,array[M,TT]]):MatrixSpace[TT,N,M] =
-  for n in 0..<N:
-    for m in 0..<M:
-      result[n,m] = a[n][m]
+func vec*[TT](a:static[varargs[TT]]):ColVectorSpace[TT,a.len] =
+  for i, x in a:
+    result.entries[i] = x
 
 #ACCESING DIAGONAL & CREATING A DIAGONAL MATRIX
 func diag*[TT,N](a: RowVectorSpace[TT,N] or ColVectorSpace[TT,N]): MatrixSpace[TT,N,N] =
@@ -140,21 +132,21 @@ func trace*[TT,N,M](a: MatrixSpace[TT,N,N]): TT =
     sum a.diag.entries
 
 func det*[TT,N](a: MatrixSpace[TT,N,N]): TT =
-	proc subdet(row:int8, cols: set[int8]): TT = #TODO support int16 indeces too
-		if row == N:
-			return TT.one
-		result = TT.zero
-		for c in cols:
-			if row + c mod 2'i8 == 0'i8
-				result += subdet(row+1, cols.excl(c))
-			else:
-				result -= subdet(row+1, cols.excl(c))
-	const cols = static:
-		var cols: set[int8]
-		for i in 0..<N:
-			cols.incl i.int8
-		cols
-	subdet(0,cols)
+    proc subdet(row:int8, cols: set[int8]): TT = #TODO support int16 indeces too
+        if row == N:
+            return TT.one
+        result = TT.zero
+        for c in cols:
+            if row + c mod 2'i8 == 0'i8:
+                result += subdet(row+1, cols.excl(c))
+            else:
+                result -= subdet(row+1, cols.excl(c))
+    const cols = static:
+        var cols: set[int8]
+        for i in 0..<N:
+            cols.incl i.int8
+        cols
+    subdet(0,cols)
 
 #func charpoly*[TT,N](A: MatrixSpace[TT,N,N]):PolynomialRing[TT,"λ"] =
 #    discard #TODO
@@ -326,10 +318,10 @@ when isMainModule:
     let v:V = [1,2,3]
     dump v
     dump v.T
-    let U = span(v, Vec(0,0,1)) + Vec(0,1,0)
+    let U = span(v, vec(0,0,1)) + vec(0,1,0)
     echo $U
     
-    let m22:QQ^(2,2) = Mat([1//1,2//1],[1//1,1//1])
+    let m22:QQ^(2,2) = mat([1//1,2//1],[1//1,1//1])
     dump m22
     dump det m22
     

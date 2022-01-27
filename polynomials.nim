@@ -1,7 +1,7 @@
 include prelude
 import numbers, finite_fields
 import sugar, macros, math, algorithm
-import algos, factorisations
+import factorisations
 import errors
 {.experimental: "callOperator".}
 
@@ -171,9 +171,6 @@ func `div`*[TT,V](f,g:PolynomialRing[TT,V]):PolynomialRing[TT,V] =
 func `mod`*[TT,V](f,g:PolynomialRing[TT,V]):PolynomialRing[TT,V] =
     divmod(f,g)[1]
 
-func `^`*[TT,V](f:PolynomialRing[TT,V], exp:int):PolynomialRing[TT,V] =
-    binaryExponentiation(f, exp)
-
 func `()`*[TT,V1](f:PolynomialRing[TT,V1], V2: static string):PolynomialRing[TT,V2] =
     PolynomialRing[TT,V2](f)
 
@@ -184,7 +181,7 @@ func `()`*[TT,V,TT2](f:PolynomialRing[TT,V], val: TT2):TT2 =
 
 func derivative*[TT,V](f:PolynomialRing[TT,V]):PolynomialRing[TT,V] =
     for i in 1..deg(f):
-		result.coeffs.add f.coeffs[i] * (i-1)
+        result.coeffs.add f.coeffs[i] * (i-1)
 
 #ROOTS & FACTORING
 
@@ -212,6 +209,7 @@ func roots*[TT:FiniteField, V](f:PolynomialRing[TT,V]):seq[TT] =
         if f(x) == TT.zero:
             result.add x
 func roots*[V](f:PolynomialRing[QQ,V]):seq[QQ] =
+    mixin `//`
     var f = f.equalentZZPoly
     if f.coeffs[0] == zero(QQ):
         result.add zero(QQ)
@@ -227,38 +225,38 @@ func roots*[V](f:PolynomialRing[QQ,V]):seq[QQ] =
                 result.add -x
 
 func roots*[V](f:PolynomialRing[RR,V]):seq[RR] =
-	import math
+    import math
     if f.deg == -1:
-		raiseInfiniteError(RR)
-	elif f.deg == 0:
-		return
-	elif f.deg == 1:
-		return -f.cc / f.lc
-	elif f.deg == 2:
-		let (a,b,c) = (f.entries[2], f.entries[1], f.entries[0])
-		let D = b*b - 4*a*c
-		if D < 0.0: return
-		if D == 0.0: return @[-b/(2.0*a)]
-		let sqrtD = sqrt D
-		return @[(-b+sqrtD)/(2.0*a), (-b-sqrtD)/(2.0*a)]
-	else:
-		assert false, "roots implemented for quadratic real polynomials"
+        raiseInfiniteError(RR)
+    elif f.deg == 0:
+        return
+    elif f.deg == 1:
+        return -f.cc / f.lc
+    elif f.deg == 2:
+        let (a,b,c) = (f.entries[2], f.entries[1], f.entries[0])
+        let D = b*b - 4*a*c
+        if D < 0.0: return
+        if D == 0.0: return @[-b/(2.0*a)]
+        let sqrtD = sqrt D
+        return @[(-b+sqrtD)/(2.0*a), (-b-sqrtD)/(2.0*a)]
+    else:
+        assert false, "roots implemented for quadratic real polynomials"
 func roots*[V](f:PolynomialRing[CC,V]):seq[CC] =
-	import complex
+    import complex
     if f.deg == -1:
-		raiseInfiniteError(CC)
-	elif f.deg == 0:
-		return
-	elif f.deg == 1:
-		return -f.cc / f.lc
-	elif f.deg == 2:
-		let (a,b,c) = (f.entries[2], f.entries[1], f.entries[0])
-		let D = b*b - 4*a*c
-		if D == complex(0.0, 0.0): return @[-b/(2.0*a)]
-		let sqrtD = sqrt D
-		return @[(-b+sqrtD)/(2.0*a), (-b-sqrtD)/(2.0*a)]
-	else:
-		assert false, "roots implemented for quadratic complex polynomials"
+        raiseInfiniteError(CC)
+    elif f.deg == 0:
+        return
+    elif f.deg == 1:
+        return -f.cc / f.lc
+    elif f.deg == 2:
+        let (a,b,c) = (f.entries[2], f.entries[1], f.entries[0])
+        let D = b*b - 4*a*c
+        if D == complex(0.0, 0.0): return @[-b/(2.0*a)]
+        let sqrtD = sqrt D
+        return @[(-b+sqrtD)/(2.0*a), (-b-sqrtD)/(2.0*a)]
+    else:
+        assert false, "roots implemented for quadratic complex polynomials"
 
 func factor*[TT,V](f:PolynomialRing[TT,V]):Factorisation[typeof f] =
     #TODO this only factors out linear factors
@@ -275,16 +273,3 @@ func factor*[TT,V](f:PolynomialRing[TT,V]):Factorisation[typeof f] =
             result.factors[(x-a)] = exp
     if deg(f) > 0:
         result.factors[f] = 1
-    
-
-when isMainModule:
-    type R = ZZ+[x]
-    let f = R.one + x^2 + x
-    echo f
-    echo f("w")
-    echo f(2)
-    #echo f(x^2)
-    type RR = ZZ+[X,"Y",Z,W]
-    echo RR
-    
-    

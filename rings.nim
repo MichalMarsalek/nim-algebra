@@ -1,9 +1,10 @@
 import sequtils, sugar
-include numbers, quadratic_extensions, finite_fields, matrices, polynomials, factor_rings
+include numbers, finite_fields, polynomials#, matrices
 
 #Numbers
-func embed*(a:ZZ, _:typedesc[QQ]):QQ =
-    a // ZZ.one
+func embed*[TT](a:TT, R:typedesc[Fractions[TT]]):R =
+    result.num = a
+    result.den = TT.one
 func embed*(a:QQ, _:typedesc[RR]):RR =
     a.toFloat
 func embed*(a:RR, _:typedesc[CC]):CC     =
@@ -56,6 +57,9 @@ func embed*[T,C](a:T,R:typedesc[FactorRing[T,C]]):R =
     result.val = a
 func embed*[T1,T2,C](a:T1,R:typedesc[FactorRing[T2,C]]):R =
     result.val = a.embed(T2)
+
+template `/`*(T:typedesc,p:auto):typedesc =
+    FactorRing[T,p.embed(T)]
 
 type Embeddable = concept type T
     T is Number or T is PolynomialRing or T is FiniteField or T is ZZQ or T is QQQ or T is FactorRing or T is MatrixSpace
@@ -111,11 +115,11 @@ func `//`*(a,b:Ring):(typeof(a)/typeof(a)) =
     
 
 when isMainModule:
-    type R = PR(ZZ, x,y,z,w)
+    type R = ZZ+[x,y,z,w]
     echo 2 + 3*x + 5*y
     echo x*y + 4*y - 58*x^2 * w
     echo (1 + sqrt(- 2)).embed(CC)
-    type R2 = (PR(GF(16, "beta"),X)/X)^3
+    type R2 = (GF(16, "beta")+[X])/X)^3
     echo R2
     type R3 = GF(16, "b")^(3,3)
     echo R3.random

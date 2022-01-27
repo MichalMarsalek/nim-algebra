@@ -1,11 +1,15 @@
 import factorisations, algorithm, bitops, math, tables
+import bigints
 import errors
 import times
 
-type ZZ* = int     #this is only temporary
-template zero*(_:typedesc[ZZ]):ZZ = 0
-template one*(_:typedesc[ZZ]):ZZ = 1
+type ZZ* = BigInt
+template initZZ*(x:typed):ZZ =
+    initBigInt(x)
+template zero*(_:typedesc[ZZ]):ZZ = 0.initZZ
+template one*(_:typedesc[ZZ]):ZZ = 1.initZZ
 
+#[
 func inv(x:uint64):uint64 =
     ## Given odd x returns x^(-1) mod 2^64.
     result = x
@@ -14,19 +18,19 @@ func inv(x:uint64):uint64 =
 func inv*(x:int):int =
     cast[int](inv cast[uint64](x))
 func `*`*(x,y:int):int =
-  int(cast[uint64](x)*cast[uint64](y))
+  int(cast[uint64](x)*cast[uint64](y))]#
 
 func gcd*(x,y:ZZ):ZZ =
     #TODO implement binary version
     var x = abs x
     var y = abs y
-    while y > 0:
+    while y > 0.initZZ:
         (x, y) = (y, x mod y)
     x
 
 iterator positive*(_:typedesc[ZZ]):ZZ =
     for i in 1..<int.high:
-        yield ZZ i
+        yield i.initZZ
 
 proc lowEratosthenes*(): seq[int] =
   var sieve = newSeq[bool](500000)
@@ -63,11 +67,11 @@ iterator primes*(_:typedesc[ZZ], low:int):ZZ =
   var low = low
   while true:
     for p in eratosthenes(low, low+999999):
-      yield ZZ(p)
+      yield p.initZZ
     low += 1000000
 iterator primes*(_:typedesc[ZZ]):ZZ =
   for p in lowPrimes:
-    yield ZZ(p)
+    yield p.initZZ
   for p in ZZ.primes(lowPrimes[^1]+1):
     yield p
 
@@ -93,29 +97,29 @@ iterator divisors*(a:ZZ):ZZ =
         yield x
 
 func factor*(x:ZZ):Factorisation[ZZ] =
-  if x == 0: raise newException(Exception, "x = 0")
-  result.unit = if x < 0: -1 else: 1
+  if x == ZZ.zero: raise newException(Exception, "x = 0")
+  result.unit = if x < 0.initZZ: -1.initZZ else: 1.initZZ
   var x = abs x
-  let exp2 = countTrailingZeroBits(x)
-  if exp2 > 0:
-    result.factors[2] = exp2
-  x = x shr exp2
   for d in ZZ.primes:
-    if d == 2: continue
     if d*d > x:
       result.factors[x] = 1
       break
     var exp = 0
-    while x mod d == 0:
+    while x mod d == ZZ.zero:
       inc exp
       x = x div d
     if exp > 0:
       result.factors[d] = exp
 
+func `^`(a:ZZ, b:int):ZZ =
+    a.pow b
+func `^`(a,b:ZZ) =
+    discard #TODO
+
 func phi*(a:ZZ):ZZ =
     result = ZZ.one
     for p,v in factor(a):
-        result *= (p-1)*p^(v-1)
+        result *= (p-1.initBigInt)*p^(v-1)
 
 
 

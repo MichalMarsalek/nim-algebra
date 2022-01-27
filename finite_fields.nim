@@ -1,8 +1,5 @@
 include prelude
-import numbers
-import math
 import sugar, macros
-import algos
 import random
 {.experimental: "callOperator".}
 
@@ -73,9 +70,6 @@ func `*`*[DEG,MOD, V](a,b:BinaryField[DEG,MOD, V]):BinaryField[DEG,MOD, V] =
             a = a shl 1
 func `*=`*[DEG,MOD, V](a:var BinaryField[DEG,MOD, V],b:BinaryField[DEG,MOD, V]) {.inline.} =
     a = a * b
-
-func `^`*[DEG,MOD, V](a:BinaryField[DEG,MOD, V],exp:int):BinaryField[DEG,MOD, V] =
-    binaryExponentiation(a, exp)
 
 func `/`*[DEG,MOD, V](a,b:BinaryField[DEG,MOD, V]):BinaryField[DEG,MOD, V] {.inline.} =
     result = a
@@ -233,15 +227,3 @@ macro GF*(cardinality:typed,variable="α"):typedesc =
             {.error: "Conway_" & $p & "," & $d & " not in DB. If you wish to work in a finite field of size " & $p & "^" & $d & ", pick an irreducible polynomial and instantiate the field as a general factor ring."}
             
     #echo toStrLit result
-
-when isMainModule:
-    type F = GF(16,"α")
-    echo F
-    const x = F.gen
-    let a:F = F 0b111 #α^2 + α + 1
-    let b:F = F 0b1011 #α^3 + α + 1
-    echo $a
-    echo x^2 + x + F.one
-    for e in GF(2^3,"X"):
-        echo (e, trace e)
-    type F2 = GF(3^200)

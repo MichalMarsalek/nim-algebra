@@ -8,7 +8,7 @@ func initFrac*[T](n,d:T): Fractions[T] =
     result.num = n
     result.den = d
 
-func `/`[T](_,_:typedesc[T]):typedesc =
+template `/`[T](_,x:typedesc[T]):typedesc =
     when T is Fractions: #TODO replace with T.isField to include finite fields etc.
         T
     else:
@@ -25,7 +25,7 @@ func `$`*[T](x: Fractions[T]): string =
     $n & "/" & $d
 
 func reduce*[T](x: var Fractions[T]) {.inline.} =
-    mixing gcd
+    mixin gcd
     let g = gcd(x.num, x.den)
     x.num = x.num div g
     x.den = x.den div g
