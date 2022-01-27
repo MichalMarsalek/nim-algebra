@@ -1,5 +1,5 @@
 include prelude
-import sugar, macros, typetraits
+import sugar, macros, typetraits, randoms
 
 type FactorRing*[TT;M:static TT] = object
     val:TT
@@ -35,3 +35,20 @@ func `*`*[TT, M](f,g:FactorRing[TT,M]):FactorRing[TT, M] =
 
 func `$`*[TT, M](f:FactorRing[TT, M]):string =
     $f.val & " + I(" & $M & ")"
+
+#temp for ZZ/(n)
+import options
+proc random*[M](R:typedesc[FactorRing[ZZ,M]]):R =
+    const mx = toSignedInt[int](M).get-1
+    R(val: randInt(mx).initZZ)
+
+iterator items*[M](R:typedesc[FactorRing[ZZ,M]]):R =
+    for i in 0.initZZ..<M.initZZ:
+        yield R(val: i)
+iterator nonzero*[M](R:typedesc[FactorRing[ZZ,M]]):R =
+    for i in 1.initZZ..<M.initZZ:
+        yield R(val: i)
+iterator invertible*[M](R:typedesc[FactorRing[ZZ,M]]):R =
+    for i in 1.initZZ..<M.initZZ:
+        if gcd(i, M) == 1.initZZ:
+            yield R(val: i)

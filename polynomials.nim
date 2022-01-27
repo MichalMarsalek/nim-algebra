@@ -8,7 +8,7 @@ import errors
 type PolynomialRing*[TT; V:static string] = object
     coeffs*:seq[TT]
 
-template `$`*(T:typedesc[PolynomialRing]):string =
+func `$`*(T:typedesc[PolynomialRing]):string =
   result = $T.TT
   if result.endsWith "]":
     result = result[0..^2] & "," & T.V & "]"

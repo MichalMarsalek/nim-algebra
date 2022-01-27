@@ -1,7 +1,10 @@
 import sequtils, sugar
-include numbers, finite_fields, polynomials#, matrices
+import randoms
+include numbers, finite_fields, polynomials, matrices
 
 #Numbers
+func embed*(a:int, R:typedesc[ZZ]):R =
+    a.initZZ
 func embed*[TT](a:TT, R:typedesc[Fractions[TT]]):R =
     result.num = a
     result.den = TT.one
@@ -9,11 +12,12 @@ func embed*(a:QQ, _:typedesc[RR]):RR =
     a.toFloat
 func embed*(a:RR, _:typedesc[CC]):CC     =
     complex(a, RR.zero)
-func embed*[D](a:QQQ[D], _:typedesc[CC]):CC     =
+func embed*[D: static QQ](a:QQQ[D], _:typedesc[CC]):CC     =
     a.x.embed(CC) + D.embed(CC).sqrt * a.y.embed(CC)
-func embed*[D](a:ZZQ[D], R:typedesc[QQQ[D]]):R     =
-    result.x = a.x.embed(QQ)
-    result.y = a.y.embed(QQ)
+func embed*[D: static ZZ](a:ZZQ[D], R:typedesc[QQQ]):R     =
+    when D == R.D:
+        result.x = a.x.embed(QQ)
+        result.y = a.y.embed(QQ)
 
 func embed*[M](a:ZZ, R:typedesc[ZZMod[M]]):R =
     R a
@@ -24,7 +28,7 @@ func embed*(a:ZZ, _:typedesc[CC]):CC =
     a.embed(RR).embed(CC)
 func embed*(a:QQ, _:typedesc[CC]):CC =
     a.embed(RR).embed(CC)
-func embed*(a:int, R:typedesc[ZZ|QQ|RR|CC]):R =
+func embed*(a:int, R:typedesc[QQ|RR|CC]):R =
     a.embed(ZZ).embed(R)
 func embed*[D](a:ZZQ[D], _:typedesc[CC]):CC =
     a.embed(QQQ[D]).embed(CC)
@@ -118,13 +122,14 @@ when isMainModule:
     type R = ZZ+[x,y,z,w]
     echo 2 + 3*x + 5*y
     echo x*y + 4*y - 58*x^2 * w
-    echo (1 + sqrt(- 2)).embed(CC)
-    type R2 = (GF(16, "beta")+[X])/X)^3
+    #echo (1 + sqrt(-2)) #why doesnt work suddenly
+    type R2 = ((GF(16, "beta")+[X])/X)^3
     echo R2
     type R3 = GF(16, "b")^(3,3)
     echo R3.random
+    #[
     let m = ((ZZ/10)^(3,3)).random
     dump m
     let v = (ZZ^3) [11,12,13]
     let mshift = m + diag(v)
-    dump mshift
+    dump mshift]#

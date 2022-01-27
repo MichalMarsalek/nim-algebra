@@ -68,9 +68,9 @@ template `^`*(T:typedesc,k:int):typedesc =
 template `^`*(T:typedesc,k:(int,int)):typedesc =
     MatrixSpace[T,k[0],k[1]]
 
-func vec*[TT](a:static[varargs[TT]]):ColVectorSpace[TT,a.len] =
-  for i, x in a:
-    result.entries[i] = x
+#func vec*[TT](a:static[varargs[TT]]):ColVectorSpace[TT,a.len] =
+#  for i, x in a:
+#    result.entries[i] = x
 
 #ACCESING DIAGONAL & CREATING A DIAGONAL MATRIX
 func diag*[TT,N](a: RowVectorSpace[TT,N] or ColVectorSpace[TT,N]): MatrixSpace[TT,N,N] =
@@ -300,7 +300,7 @@ func ker*[TT,N,M](a: MatrixSpace[TT,N,M]):AffineSpace[RowVectorSpace[TT,M]] =
 #TODO // and \\ solution to linear system
 
     
-
+#[
 when isMainModule:
     type M = ZZ^(3,2)
     echo M
@@ -327,3 +327,4 @@ when isMainModule:
     
     dump rank m22.rowEchelon
     dump norm (RR^2) [3.0, 4.0]
+]#

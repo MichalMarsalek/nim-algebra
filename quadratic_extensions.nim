@@ -17,9 +17,9 @@ template zero*[T,D](R:typedesc[QuadraticExtension[T,D]]):R =
 template one*[T,D](R:typedesc[QuadraticExtension[T,D]]):R =
     result.x = T.one
     result.y = T.zero
-template sqrt*[T](a:static[T]):QuadraticExtension[T,a] =
-    result.x = T.zero
-    result.y = T.one
+template sqrt*(a:static[int]):ZZQ[a] =
+    result.x = ZZ.zero
+    result.y = ZZ.one
     
 func `$`*[T,D](a:QuadraticExtension[T,D]):string =
     when D == -T.one:

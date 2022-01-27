@@ -1,6 +1,6 @@
 include prelude
+import randoms
 import sugar, macros
-import random
 {.experimental: "callOperator".}
 
 #Conway polynomials:
@@ -31,7 +31,7 @@ template gen*[DEG, MOD, V](R:typedesc[BinaryField[DEG, MOD, V]]):R = R 2'u64
 
 proc random*[DEG,MOD,V](R:typedesc[BinaryField[DEG,MOD,V]]):R =
     const mx = (1 shl DEG) - 1
-    R rand(mx)
+    R randInt(mx)
 
 iterator items*[DEG,MOD,V](F:typedesc[BinaryField[DEG,MOD,V]]):F =
     for i in 0..<(1 shl DEG):

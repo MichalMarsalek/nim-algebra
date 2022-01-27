@@ -2,6 +2,7 @@ include prelude
 include complex
 include integers, fractions, factor_rings
 import sugar
+import randoms
 
 type RR* = float   #this is only temporary
 type CC* = Complex[float] #this is only temporary
