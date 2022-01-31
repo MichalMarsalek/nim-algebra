@@ -15,7 +15,7 @@ func `$`*(T:typedesc[PolynomialRing]):string =
     result &= "+[" & T.V & "]"
 
 func zero*[TT;V:static string](R:typedesc[PolynomialRing[TT, V]]):R =
-    PolynomialRing[TT, V](coeffs: @[zero(typeof TT)])
+    PolynomialRing[TT, V](coeffs: @[])
 func one*[TT; V:static string](R:typedesc[PolynomialRing[TT, V]]):R =
     PolynomialRing[TT, V](coeffs: @[one(typeof TT)])
 
@@ -153,6 +153,8 @@ func `*=`*[TT,V](f: var PolynomialRing[TT,V],g:PolynomialRing[TT,V]) =
     
 func divmod[TT,V](f,g:PolynomialRing[TT,V]):(PolynomialRing[TT,V],PolynomialRing[TT,V]) =
     #TODO make this more efficient
+    if g.coeffs.len == 0:
+        raiseInvertError(g) #TODO replace invert with zero
     var deg_fg = deg(f) - deg(g)
     result[1] = f
     result[0].coeffs = newSeqWith[TT](max(0, deg_fg+1), zero(TT))

@@ -114,9 +114,9 @@ func `^`*[T:Ring](value:T, exp:int|ZZ):T =
 func gcd*[T:Ring](a,b:T):T =
     var a = a
     var b = b
-    while a != T.zero:
+    while b != T.zero:
         (a,b) = (b, a mod b)
-    return b
+    return a
 
 func egcd*[T:Ring](a,b: T): (T, T, T) =
     var (old_r, r) = (a, b)
@@ -130,7 +130,6 @@ func egcd*[T:Ring](a,b: T): (T, T, T) =
         (old_t, t) = (t, old_t - q*t)
     
     result = (old_r, old_s, old_t)
-    dump (a,b,result)
 
 func `/`*[T:Ring](a,b:T):typeof(a) =
     a * b.inv
@@ -161,12 +160,7 @@ when isMainModule:
         echo 1//2
     block:
         type R4 = ZZ/5+[x]
-        #echo R4
-        #echo egcd(15, 333)
-        #echo x+1
-        echo gcd(x+1,x+2)
-        #echo (x+1,x+2)
-        #echo (x+1)//(x+2)
+        echo ((x-1)*(x+1))//((x-1)*(x+2))
     #[
     let m = ((ZZ/10)^(3,3)).random
     dump m

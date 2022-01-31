@@ -33,6 +33,11 @@ template fractionField*(T: typedesc):typedesc =
             )
     internal()
 
+func toComposable(x:auto):string =
+    result = $x
+    if "+" in result or "-" in result:
+        result = "(" & result & ")"
+
 func `$`*[T](x: Fractions[T]): string =
     var d = x.den
     var n = x.num
@@ -41,7 +46,7 @@ func `$`*[T](x: Fractions[T]): string =
         n = -n
     if d == T.one:
         return $n
-    $n & "/" & $d
+    n.toComposable & "/" & d.toComposable
 
 func reduce*[T](x: var Fractions[T]) {.inline.} =
     mixin gcd
