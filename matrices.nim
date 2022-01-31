@@ -132,29 +132,31 @@ func trace*[TT,N,M](a: MatrixSpace[TT,N,N]): TT =
     sum a.diag.entries
 
 func det*[TT,N](a: MatrixSpace[TT,N,N]): TT =
-    proc subdet(row:int8, cols: set[int8]): TT = #TODO support int16 indeces too
+    #mixin one
+    var res = TT.zero
+    proc subdet(row:int8, cols: set[int8], temp:TT) = #TODO support int16 indeces too
         if row == N:
-            return TT.one
-        result = TT.zero
+            res = res + temp
+        dump (row, cols, temp)
         for c in cols:
             if row + c mod 2'i8 == 0'i8:
-                result += subdet(row+1, cols.excl(c))
+                subdet(row+1, cols - {c}, a[row,c] * temp)
             else:
-                result -= subdet(row+1, cols.excl(c))
-    const cols = static:
+                subdet(row+1, cols - {c}, -a[row,c] * temp)
+    let cols = block: #why cant this be const
         var cols: set[int8]
         for i in 0..<N:
             cols.incl i.int8
         cols
-    subdet(0,cols)
+    subdet(0,cols,TT.one)
+    return res
 
-#func charpoly*[TT,N](A: MatrixSpace[TT,N,N]):PolynomialRing[TT,"λ"] =
-#    discard #TODO
-    #type S = PolynomialRing[TT,"λ"]
-    #det(embed[MatrixSpace[S,N,N]](A) - S.gen)
-#func eigenvalues*[TT,N](A: MatrixSpace[TT,N,N]):seq[TT] =
-#    discard #TODO
-    #A.charpoly.roots
+func charpoly*[TT,N](A: MatrixSpace[TT,N,N]):PolynomialRing[TT,"L"] =
+    type S = TT+["L"]
+    debugEcho (A.embed(S^(N,N)) - S.gen*(S^(N,N)).one)
+    det(A.embed(S^(N,N)) - S.gen*(S^(N,N)).one)
+func eigenvalues*[TT,N](A: MatrixSpace[TT,N,N]):seq[TT] =
+    A.charpoly.roots
 
 #SCALAR ARITHMETICS
 func `+=`*[TT,N,M](a: var MatrixSpace[TT,N,M], b: TT) =
@@ -333,6 +335,66 @@ macro vec*(T:typedesc,data:varargs[typed]):untyped =
       newIdentNode("ColVectorSpace"),
       T,
       newLit(data.len)
+    ),
+    nnkExprColonExpr.newTree(
+      newIdentNode("entries"),
+      nnkBracket.newTree(
+        data.mapIt(
+          nnkCall.newTree(
+            newIdentNode("embed"),
+            it,
+            T
+          )
+        )
+      )
+    )
+  )
+  #echo result.toStrLit
+
+#TODO add rectangular matrix constructors
+from math import sqrt
+macro mat*(data:varargs[typed]):untyped =
+  let L = data.len
+  let N = L.float.sqrt.int
+  assert N*N == L
+  result = nnkObjConstr.newTree(
+    nnkBracketExpr.newTree(
+      newIdentNode("MatrixSpace"),
+      nnkCall.newTree(
+        newIdentNode("typeof"),
+        data[0]
+      ),
+      newLit(N),
+      newLit(N)
+    ),
+    nnkExprColonExpr.newTree(
+      newIdentNode("entries"),
+      nnkBracket.newTree(
+        data.mapIt(
+          nnkCall.newTree(
+            newIdentNode("embed"),
+            it,
+            nnkCall.newTree(
+              newIdentNode("typeof"),
+              data[0]
+            )
+          )
+        )
+      )
+    )
+  )
+  #echo result.toStrLit
+
+macro mat*(T:typedesc,data:varargs[typed]):untyped =
+  let L = data.len
+  let N = L.float.sqrt.int
+  assert N*N == L
+  result = nnkObjConstr.newTree(
+    nnkBracketExpr.newTree(
+      newIdentNode("MatrixSpace"),
+      T,
+      newLit(N),
+      newLit(N)
     ),
     nnkExprColonExpr.newTree(
       newIdentNode("entries"),

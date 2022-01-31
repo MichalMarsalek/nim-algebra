@@ -9,8 +9,8 @@ type CC* = Complex[float] #this is only temporary
 
 template zero*(_:typedesc[RR]):RR = 0.0
 template one*(_:typedesc[RR]):RR = 1.0
-template zero*(_:typedesc[CC]):CC = Complex(0.0,0.0)
-template one*(_:typedesc[CC]):CC = Complex(1.0,0.0)
+template zero*(_:typedesc[CC]):CC = complex(0.0,0.0)
+template one*(_:typedesc[CC]):CC = complex(1.0,0.0)
 
 type QQ* = Fractions[ZZ]
 func `$`*(_:typedesc[QQ]):string = "QQ"

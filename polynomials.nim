@@ -225,16 +225,16 @@ func roots*[V](f:PolynomialRing[QQ,V]):seq[QQ] =
             if f(-x) == zero(QQ):
                 result.add -x
 
+import math
 func roots*[V](f:PolynomialRing[RR,V]):seq[RR] =
-    import math
     if f.deg == -1:
         raiseInfiniteError(RR)
     elif f.deg == 0:
         return
     elif f.deg == 1:
-        return -f.cc / f.lc
+        return @[-f.cc / f.lc]
     elif f.deg == 2:
-        let (a,b,c) = (f.entries[2], f.entries[1], f.entries[0])
+        let (a,b,c) = (f.coeffs[2], f.coeffs[1], f.coeffs[0])
         let D = b*b - 4*a*c
         if D < 0.0: return
         if D == 0.0: return @[-b/(2.0*a)]
@@ -243,15 +243,14 @@ func roots*[V](f:PolynomialRing[RR,V]):seq[RR] =
     else:
         assert false, "roots implemented for quadratic real polynomials"
 func roots*[V](f:PolynomialRing[CC,V]):seq[CC] =
-    import complex
     if f.deg == -1:
         raiseInfiniteError(CC)
     elif f.deg == 0:
         return
     elif f.deg == 1:
-        return -f.cc / f.lc
+        return @[-f.cc / f.lc]
     elif f.deg == 2:
-        let (a,b,c) = (f.entries[2], f.entries[1], f.entries[0])
+        let (a,b,c) = (f.coeffs[2], f.coeffs[1], f.coeffs[0])
         let D = b*b - 4*a*c
         if D == complex(0.0, 0.0): return @[-b/(2.0*a)]
         let sqrtD = sqrt D

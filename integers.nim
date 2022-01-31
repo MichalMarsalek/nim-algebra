@@ -41,27 +41,28 @@ proc lowEratosthenes*(): seq[int] =
         sieve[m div 2] = true
       result.add i
 
-const lowPrimes = lowEratosthenes()
+let lowPrimes = lowEratosthenes()
 
 iterator eratosthenes*(low, high:int):int =
-  var low = low - low mod 2
-  var sieve = newSeq[bool]((high-low) div 2)
-  var lastPrime = 2
-  for p in lowPrimes:
-    if p*p > high: break
-    if p == 2: continue
-    for m in countup((low.ceilDiv(p) * p)-low, high-low-1,p):
-      if m mod 2 == 1:
-        sieve[m div 2] = true
-    for i in countup(lastPrime*lastPrime,p*p,2):
-      if i >= low:
-        if not sieve[(i-low) div 2]:
-          yield i
-    lastPrime = p
-  for i in countup(lastPrime*lastPrime, high-1, 2):
-    if i >= low:
-      if not sieve[(i-low) div 2]:
-        yield i
+  {.cast(noSideEffect).}:
+      var low = low - low mod 2
+      var sieve = newSeq[bool]((high-low) div 2)
+      var lastPrime = 2
+      for p in lowPrimes:
+        if p*p > high: break
+        if p == 2: continue
+        for m in countup((low.ceilDiv(p) * p)-low, high-low-1,p):
+          if m mod 2 == 1:
+            sieve[m div 2] = true
+        for i in countup(lastPrime*lastPrime,p*p,2):
+          if i >= low:
+            if not sieve[(i-low) div 2]:
+              yield i
+        lastPrime = p
+      for i in countup(lastPrime*lastPrime, high-1, 2):
+        if i >= low:
+          if not sieve[(i-low) div 2]:
+            yield i
 
 iterator primes*(_:typedesc[ZZ], low:int):ZZ =
   var low = low
@@ -70,10 +71,11 @@ iterator primes*(_:typedesc[ZZ], low:int):ZZ =
       yield p.initZZ
     low += 1000000
 iterator primes*(_:typedesc[ZZ]):ZZ =
-  for p in lowPrimes:
-    yield p.initZZ
-  for p in ZZ.primes(lowPrimes[^1]+1):
-    yield p
+  {.cast(noSideEffect).}:
+      for p in lowPrimes:
+        yield p.initZZ
+      for p in ZZ.primes(lowPrimes[^1]+1):
+        yield p
 
 func isPrime*(a:ZZ):bool =
     #TODO implement more efficient version

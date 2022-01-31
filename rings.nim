@@ -101,6 +101,17 @@ template `-`[T1,T2:Embeddable](a:T1, b:T2):untyped =
     else:
         {.error: "Cannot embed " & $typeof(a) & " in " & $typeof(b) & " nor " & $typeof(b) & " in " & $typeof(a) & "."}
 
+
+template `*=`[T1,T2:Embeddable](a: var T1, b: T2):untyped =
+    a = a * b
+template `+=`[T1,T2:Embeddable](a: var T1, b: T2):untyped =
+    a = a * b
+template `-=`[T1,T2:Embeddable](a: var T1, b: T2):untyped =
+    a = a * b
+template `/=`[T1,T2:Embeddable](a: var T1, b: T2):untyped =
+    a = a / b
+
+
 func `^`*[T:Ring](value:T, exp:int|ZZ):T =
     result = T.one
     var intermediate = value
@@ -158,9 +169,15 @@ when isMainModule:
         echo vec(1.0,2,3)
         echo CC.vec(1,2,3)
         echo 1//2
-    block:
+    when false:
         type R4 = ZZ/5+[x]
         echo ((x-1)*(x+1))//((x-1)*(x+2))
+        var a = 2 + I(6)
+        a *= 2 + I(6)
+        echo a
+    when true:
+        echo RR.mat(1,2,
+                    3,4).eigenvalues
     #[
     let m = ((ZZ/10)^(3,3)).random
     dump m

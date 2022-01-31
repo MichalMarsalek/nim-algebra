@@ -9,6 +9,11 @@ func initFrac*[T](n,d:T): Fractions[T] =
     result.num = n
     result.den = d
 
+template zero*[T](R:typedesc[Fractions[T]]):R =
+    initFrac(T.zero, T.one)
+template one*[T](R:typedesc[Fractions[T]]):R =
+    initFrac(T.one, T.one)
+
 #[
 template `///`*[T](_,x:typedesc):typedesc = #TODO this doesn't work
     if T is Fractions: #TODO replace with T.isField to include finite fields etc.
@@ -67,10 +72,6 @@ func `+`*[T](x, y: Fractions[T]): Fractions[T] {.inline.} =
   result.num = x.num * y.den + y.num * x.den
   result.den = x.den * y.den
   reduce result
-func `+=`*[T](x: var Fractions[T], y: Fractions[T]) {.inline.} =
-  x.num = x.num * y.den + y.num * x.den
-  x.den = x.den * y.den
-  reduce x
 
 func `-`*[T](x: Fractions[T]): Fractions[T] {.inline.} =
   result.num = -x.num
@@ -79,19 +80,11 @@ func `-`*[T](x, y: Fractions[T]): Fractions[T] {.inline.} =
   result.num = x.num * y.den - y.num * x.den
   result.den = x.den * y.den
   reduce result
-func `-=`*[T](x: var Fractions[T], y: Fractions[T]) {.inline.} =
-  x.num = x.num * y.den - y.num * x.den
-  x.den = x.den * y.den
-  reduce x
 
 func `*`*[T](x, y: Fractions[T]): Fractions[T] {.inline.} =
   result.num = x.num * y.num
   result.den = x.den * y.den
   reduce result
-func `*=`*[T](x: var Fractions[T], y: Fractions[T]) {.inline.} =
-  x.num *= y.num
-  x.den *= y.den
-  reduce x
 
 func inv*[T](x: Fractions[T]): Fractions[T] {.inline.} =
   if x.num == T.zero:
