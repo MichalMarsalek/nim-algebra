@@ -299,6 +299,55 @@ func ker*[TT,N,M](a: MatrixSpace[TT,N,M]):AffineSpace[RowVectorSpace[TT,M]] =
 
 #TODO // and \\ solution to linear system
 
+macro vec*(data:varargs[typed]):untyped =
+  result = nnkObjConstr.newTree(
+    nnkBracketExpr.newTree(
+      newIdentNode("ColVectorSpace"),
+      nnkCall.newTree(
+        newIdentNode("typeof"),
+        data[0]
+      ),
+      newLit(data.len)
+    ),
+    nnkExprColonExpr.newTree(
+      newIdentNode("entries"),
+      nnkBracket.newTree(
+        data.mapIt(
+          nnkCall.newTree(
+            newIdentNode("embed"),
+            it,
+            nnkCall.newTree(
+              newIdentNode("typeof"),
+              data[0]
+            )
+          )
+        )
+      )
+    )
+  )
+  #echo result.toStrLit
+
+macro vec*(T:typedesc,data:varargs[typed]):untyped =
+  result = nnkObjConstr.newTree(
+    nnkBracketExpr.newTree(
+      newIdentNode("ColVectorSpace"),
+      T,
+      newLit(data.len)
+    ),
+    nnkExprColonExpr.newTree(
+      newIdentNode("entries"),
+      nnkBracket.newTree(
+        data.mapIt(
+          nnkCall.newTree(
+            newIdentNode("embed"),
+            it,
+            T
+          )
+        )
+      )
+    )
+  )
+  #echo result.toStrLit
     
 #[
 when isMainModule:
@@ -321,7 +370,7 @@ when isMainModule:
     let U = span(v, vec(0,0,1)) + vec(0,1,0)
     echo $U
     
-    let m22:QQ^(2,2) = mat([1//1,2//1],[1//1,1//1])
+    let m22 = QQ.mat(1,2,1,1)
     dump m22
     dump det m22
     

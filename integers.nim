@@ -1,4 +1,5 @@
-import factorisations, algorithm, bitops, math, tables
+import algorithm, bitops, math, tables
+import factorisations
 import bigints
 import errors
 import times
@@ -8,6 +9,8 @@ template initZZ*(x:typed):ZZ =
     initBigInt(x)
 template zero*(_:typedesc[ZZ]):ZZ = 0.initZZ
 template one*(_:typedesc[ZZ]):ZZ = 1.initZZ
+template zero*(_:typedesc[int]):int = 0
+template one*(_:typedesc[int]):int = 1
 func `$`*(_:typedesc[ZZ]):string = "ZZ"
 
 #[
@@ -21,13 +24,9 @@ func inv*(x:int):int =
 func `*`*(x,y:int):int =
   int(cast[uint64](x)*cast[uint64](y))]#
 
-func gcd*(x,y:ZZ):ZZ =
-    #TODO implement binary version
-    var x = abs x
-    var y = abs y
-    while y > 0.initZZ:
-        (x, y) = (y, x mod y)
-    x
+#TODO do binary version of gcd for ints
+func divmod*(a,b:int):(int,int) =
+    (a div b, a mod b)
 
 iterator positive*(_:typedesc[ZZ]):ZZ =
     for i in 1..<int.high:

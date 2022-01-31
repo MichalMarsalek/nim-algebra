@@ -1,4 +1,5 @@
 include prelude
+import errors
 import sugar, macros, typetraits, randoms
 
 type FactorRing*[TT;M:static TT] = object
@@ -30,13 +31,23 @@ func `+`*[TT](poly:TT, M:static[Ideal[TT]]):auto =
 
 func `+`*[TT, M](f,g:FactorRing[TT,M]):FactorRing[TT, M] =
     result.val = (f.val + g.val) mod M
+func `+=`*[TT, M](f:var FactorRing[TT,M],g:FactorRing[TT,M]) =
+    f += g
 func `-`*[TT, M](f,g:FactorRing[TT,M]):FactorRing[TT, M] =
     result.val = (f.val - g.val) mod M
+func `-=`*[TT, M](f:var FactorRing[TT,M],g:FactorRing[TT,M]) =
+    f -= g
 func `-`*[TT, M](f:FactorRing[TT,M]):FactorRing[TT, M] =
     result.val = (-f.val) mod M
 func `*`*[TT, M](f,g:FactorRing[TT,M]):FactorRing[TT, M] =
     result.val = (f.val * g.val) mod M
-#TODO inv
+func `*=`*[TT, M](f:var FactorRing[TT,M],g:FactorRing[TT,M]) =
+    f *= g
+func inv*[TT, M](f:FactorRing[TT,M]):FactorRing[TT, M] =
+    let (g,u,v) = f.val.egcd(M)
+    if g != TT.one:
+        raiseInvertError(f)
+    return u + I(M)
 
 func `$`*[TT, M](f:FactorRing[TT, M]):string =
     $f.val & " + I(" & $M & ")"

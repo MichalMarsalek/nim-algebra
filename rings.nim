@@ -1,6 +1,11 @@
 import sequtils, sugar
 import randoms
+import factorisations
 include numbers, finite_fields, polynomials, matrices
+
+#Noop embed
+func embed*[T](a:T, R:typedesc[T]):T =
+    a
 
 #Numbers
 func embed*(a:int, R:typedesc[ZZ]):R =
@@ -9,7 +14,7 @@ func embed*[TT](a:TT, R:typedesc[Fractions[TT]]):R =
     result.num = a
     result.den = TT.one
 func embed*(a:QQ, _:typedesc[RR]):RR =
-    a.toFloat
+    toSignedInt[int](a.num).get.float / toSignedInt[int](a.den).get.float
 func embed*(a:RR, _:typedesc[CC]):CC     =
     complex(a, RR.zero)
 func embed*[D: static QQ](a:QQQ[D], _:typedesc[CC]):CC     =
@@ -32,6 +37,9 @@ func embed*(a:int, R:typedesc[QQ|RR|CC]):R =
     a.embed(ZZ).embed(R)
 func embed*[D](a:ZZQ[D], _:typedesc[CC]):CC =
     a.embed(QQQ[D]).embed(CC)
+
+func embed*(a:int, _:typedesc[QQ]):QQ =
+    a.embed(ZZ).embed(QQ)
 
 #Polynomials
 func embed*[T1,T2,V](a:PolynomialRing[T1,V],R:typedesc[PolynomialRing[T2,V]]):R =
@@ -66,7 +74,7 @@ template `/`*(T:typedesc,p:auto):typedesc =
     FactorRing[T,p.embed(T)]
 
 type Embeddable = concept type T
-    T is Number or T is PolynomialRing or T is FiniteField or T is ZZQ or T is QQQ or T is FactorRing or T is MatrixSpace
+    T is Number or T is PolynomialRing or T is FiniteField or T is ZZQ or T is QQQ or T is FactorRing or T is Fractions or T is MatrixSpace
 
 type Ring = Embeddable #TODO
 
@@ -76,13 +84,6 @@ template `*`[T1,T2:Embeddable](a:T1, b:T2):untyped =
         a.embed(typeof(b)) * b
     elif compiles(b.embed(typeof(a))):
         a * b.embed(typeof(a))
-    else:
-        {.error: "Cannot embed " & $typeof(a) & " in " & $typeof(b) & " nor " & $typeof(b) & " in " & $typeof(a) & "."}
-template `/`[T1,T2:Embeddable](a:T1, b:T2):untyped =
-    when compiles(a.embed(typeof(b))):
-        a.embed(typeof(b)) / b
-    elif compiles(b.embed(typeof(a))):
-        a / b.embed(typeof(a))
     else:
         {.error: "Cannot embed " & $typeof(a) & " in " & $typeof(b) & " nor " & $typeof(b) & " in " & $typeof(a) & "."}
 template `+`[T1,T2:Embeddable](a:T1, b:T2):untyped =
@@ -100,8 +101,8 @@ template `-`[T1,T2:Embeddable](a:T1, b:T2):untyped =
     else:
         {.error: "Cannot embed " & $typeof(a) & " in " & $typeof(b) & " nor " & $typeof(b) & " in " & $typeof(a) & "."}
 
-func `^`*(value:Ring, exp:int|ZZ):typeof(value) =
-    result = typeof(value).one
+func `^`*[T:Ring](value:T, exp:int|ZZ):T =
+    result = T.one
     var intermediate = value
     var exp1 = exp
     while exp1 > 0:
@@ -110,27 +111,62 @@ func `^`*(value:Ring, exp:int|ZZ):typeof(value) =
         intermediate *= intermediate
         exp1 = exp1 shr 1
 
-func `/`*(a,b:Ring):typeof(value) =
+func gcd*[T:Ring](a,b:T):T =
+    var a = a
+    var b = b
+    while a != T.zero:
+        (a,b) = (b, a mod b)
+    return b
+
+func egcd*[T:Ring](a,b: T): (T, T, T) =
+    var (old_r, r) = (a, b)
+    var (old_s, s) = (T.one, T.zero)
+    var (old_t, t) = (T.zero, T.one)
+    
+    while r != T.zero:
+        let (q, m) = old_r .divmod r
+        (old_r, r) = (r, m)
+        (old_s, s) = (s, old_s - q*s)
+        (old_t, t) = (t, old_t - q*t)
+    
+    result = (old_r, old_s, old_t)
+    dump (a,b,result)
+
+func `/`*[T:Ring](a,b:T):typeof(a) =
+    a * b.inv
+func `div`*[T:Ring](a,b:T):typeof(a) =
     a * b.inv
 
-func `//`*(a,b:Ring):(typeof(a)/typeof(a)) =
-    type FR = (typeof(a)/typeof(a))
-    a.embed(FR) / b.embed(FR)
+func `//`*[T:Ring](a,b:T):Fractions[T] = #TODO temp
+    #type FR = fractionField(typeof(a))
+    #type FR = Fractions[typeof(a)] #TODO temporary
+    #echo FR
+    #a.embed(FR) / b.embed(FR)
+    result = initFrac(a,b)
+    reduce result
     
 
 when isMainModule:
-    type R = ZZ+[x,y,z,w]
-    echo 2 + 3*x + 5*y
-    echo x*y + 4*y - 58*x^2 * w
-    #echo (1 + sqrt(-2)) #why doesnt work suddenly
-    type R2 = ((GF(16, "beta")+[X])/X)^3
-    echo R2
-    type R3 = GF(16, "b")^(3,3)
-    echo R3.random
-    type R4 = ZZ/5+[x]
-    echo R4
-    for e in R4:
-        echo e
+    when false:
+        type R = ZZ+[x,y,z,w]
+        echo 2 + 3*x + 5*y
+        echo x*y + 4*y - 58*x^2 * w
+        #echo (1 + sqrt(-2)) #why doesnt work suddenly
+        type R2 = (GF(16, "beta")+[X])^3
+        echo R2
+        type R3 = GF(16, "b")^(3,3)
+        echo R3.random
+        echo vec(1.0,2,3)
+        echo CC.vec(1,2,3)
+        echo 1//2
+    block:
+        type R4 = ZZ/5+[x]
+        #echo R4
+        #echo egcd(15, 333)
+        #echo x+1
+        echo gcd(x+1,x+2)
+        #echo (x+1,x+2)
+        #echo (x+1)//(x+2)
     #[
     let m = ((ZZ/10)^(3,3)).random
     dump m

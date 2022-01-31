@@ -1,7 +1,6 @@
 include prelude
 import numbers, finite_fields
 import sugar, macros, math, algorithm
-import factorisations
 import errors
 {.experimental: "callOperator".}
 
@@ -118,7 +117,7 @@ func `+=`*[TT,V](f: var PolynomialRing[TT,V],g:PolynomialRing[TT,V]) =
     let mindeg = min(deg f, deg g)
     let maxdeg = max(deg f, deg g)
     for i in 0..mindeg:
-        f.coeffs[i] += g.coeffs[i]
+        f.coeffs[i] = f.coeffs[i] + g.coeffs[i]
     for i in (deg(f)+1)..maxdeg:
         f.coeffs.add g.coeffs[i]
     if needsNormalizing:
@@ -131,7 +130,7 @@ func `-=`*[TT,V](f: var PolynomialRing[TT,V],g:PolynomialRing[TT,V]) =
     let mindeg = min(deg f, deg g)
     let maxdeg = max(deg f, deg g)
     for i in 0..mindeg:
-        f.coeffs[i] -= g.coeffs[i]
+        f.coeffs[i] = f.coeffs[i] - g.coeffs[i]
     for i in (deg(f)+1)..maxdeg:
         f.coeffs.add -g.coeffs[i]
     if needsNormalizing:
@@ -147,7 +146,7 @@ func `*`*[TT,V](f,g:PolynomialRing[TT,V]):PolynomialRing[TT,V] =
     result.coeffs = newSeqWith(deg(f)+deg(g)+1, zero(TT))
     for i,fi in f:
         for j,gj in g:
-            result.coeffs[i+j] += fi*gj
+            result.coeffs[i+j] = result.coeffs[i+j] + fi*gj
     normalize result
 func `*=`*[TT,V](f: var PolynomialRing[TT,V],g:PolynomialRing[TT,V]) =
     f = f*g
@@ -159,7 +158,7 @@ func divmod[TT,V](f,g:PolynomialRing[TT,V]):(PolynomialRing[TT,V],PolynomialRing
     result[0].coeffs = newSeqWith[TT](max(0, deg_fg+1), zero(TT))
     const x = typeof(f).gen
     while deg_fg >= 0:
-        let c = result[1].lc / g.lc
+        let c = result[1].lc div g.lc
         result[0].coeffs[deg_fg] = c
         #result[0] += c * x^deg_fg
         result[1] -= g * c * x^deg_fg

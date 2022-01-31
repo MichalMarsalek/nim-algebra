@@ -1,4 +1,5 @@
 include prelude
+import factorisations
 include complex
 include integers, fractions, factor_rings
 import sugar
@@ -11,8 +12,13 @@ template one*(_:typedesc[RR]):RR = 1.0
 template zero*(_:typedesc[CC]):CC = Complex(0.0,0.0)
 template one*(_:typedesc[CC]):CC = Complex(1.0,0.0)
 
-type QQ* = ZZ/ZZ
+type QQ* = Fractions[ZZ]
 func `$`*(_:typedesc[QQ]):string = "QQ"
+func `$`*(_:typedesc[RR]):string = "RR"
+func `$`*(_:typedesc[CC]):string = "CC"
+
+func `$`*(a:CC):string =
+    replace($a.re & " + " & $a.im & "i", "+ -", "- ")
 
 include quadratic_extensions
 

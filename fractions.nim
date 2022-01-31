@@ -1,4 +1,5 @@
 import errors
+import macros
 
 type Fractions*[T] = object
     num*: T
@@ -8,11 +9,29 @@ func initFrac*[T](n,d:T): Fractions[T] =
     result.num = n
     result.den = d
 
-template `/`[T](_,x:typedesc[T]):typedesc =
-    when T is Fractions: #TODO replace with T.isField to include finite fields etc.
+#[
+template `///`*[T](_,x:typedesc):typedesc = #TODO this doesn't work
+    if T is Fractions: #TODO replace with T.isField to include finite fields etc.
         T
     else:
         Fractions[T]
+]#
+
+template fractionField*(T: typedesc):typedesc =
+    macro internal: typedesc =
+        if T is int:
+            return nnkBracketExpr.newTree(
+                newIdentNode("Fractions"),
+                newIdentNode("ZZ")
+            )
+        elif T is Fractions: #TODO replace with T.isField to include finite fields etc.
+            return quote do: `T`
+        else:
+            return nnkBracketExpr.newTree(
+                newIdentNode("Fractions"),
+                quote do: `T` 
+            )
+    internal()
 
 func `$`*[T](x: Fractions[T]): string =
     var d = x.den
