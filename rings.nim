@@ -176,8 +176,8 @@ when isMainModule:
         a *= 2 + I(6)
         echo a
     when true:
-        echo RR.mat(1,2,
-                    3,4).eigenvalues
+        echo QQ.mat(1,2,
+                    3,4).charpoly
     #[
     let m = ((ZZ/10)^(3,3)).random
     dump m

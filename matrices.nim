@@ -135,25 +135,26 @@ func det*[TT,N](a: MatrixSpace[TT,N,N]): TT =
     #mixin one
     var res = TT.zero
     proc subdet(row:int8, cols: set[int8], temp:TT) = #TODO support int16 indeces too
-        if row == N:
+        if row == -1:
             res = res + temp
-        dump (row, cols, temp)
+        var i = 0
         for c in cols:
-            if row + c mod 2'i8 == 0'i8:
-                subdet(row+1, cols - {c}, a[row,c] * temp)
+            if (row + i) mod 2'i8 == 0'i8:
+                subdet(row-1, cols - {c}, a[row,c] * temp)
             else:
-                subdet(row+1, cols - {c}, -a[row,c] * temp)
+                subdet(row-1, cols - {c}, -a[row,c] * temp)
+            inc i
     let cols = block: #why cant this be const
         var cols: set[int8]
         for i in 0..<N:
             cols.incl i.int8
         cols
-    subdet(0,cols,TT.one)
+    subdet(N-1,cols,TT.one)
     return res
 
 func charpoly*[TT,N](A: MatrixSpace[TT,N,N]):PolynomialRing[TT,"L"] =
     type S = TT+["L"]
-    debugEcho (A.embed(S^(N,N)) - S.gen*(S^(N,N)).one)
+    debugEcho (A - S.gen*(S^(N,N)).one)
     det(A.embed(S^(N,N)) - S.gen*(S^(N,N)).one)
 func eigenvalues*[TT,N](A: MatrixSpace[TT,N,N]):seq[TT] =
     A.charpoly.roots
