@@ -186,8 +186,11 @@ Types:
 
 Functions:
 * [x] Usual arithmetic operations
+* [x] `A && B` vertical concatenation
+* [x] `A || B` horizontal concatenation
 * [x] `T` - transposition
 * [x] `A[i,j]` - indexing
+* [x] `A[ia..ib,ja..jb]` - slicing
 * [x] `v.norm(p=2)` - norm of a vector - p can be in {0,1,2,-1} where -1 indicates the oo-norm. 2-norm is only available over the reals
 * [x] `v.norm2` - norm of a vector squared
 * [ ] `todo` - matrix norms
