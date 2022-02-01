@@ -40,7 +40,7 @@ template fractionField*(T: typedesc):typedesc =
 
 func toComposable(x:auto):string =
     result = $x
-    if "+" in result or "-" in result:
+    if "+" in result or "-" in result[1..^1]:
         result = "(" & result & ")"
 
 func `$`*[T](x: Fractions[T]): string =

@@ -22,7 +22,7 @@ func `$`*[TT, N, M](R:typedesc[MatrixSpace[TT, N, M]]):string =
 
 #INDEXING & CONCATENATING
 # 1st row, then 2nd row etc.
-func `[]=`*[TT;N,M:static int](a: var MatrixSpace[TT,N,M],n,m:int,val:TT) =
+func `[]=`*[TT;N,M:static int](a: var MatrixSpace[TT,N,M],n:range[0..N-1],m:range[0..M-1],val:TT) =
   a.entries[n*M+m] = val
 func `[]=`*[TT;N,M:static int](a: var MatrixSpace[TT,N,M],n:BackwardsIndex,m:int,val:TT) =
   a.entries[(N-n.int)*M+m] = val
@@ -31,7 +31,7 @@ func `[]=`*[TT;N,M:static int](a: var MatrixSpace[TT,N,M],n:int,m:BackwardsIndex
 func `[]=`*[TT;N,M:static int](a: var MatrixSpace[TT,N,M],n,m:BackwardsIndex,val:TT) =
   a.entries[N*M-n.int*M-m.int] = val
 
-func `[]`*[TT;N,M:static int](a: MatrixSpace[TT,N,M],n,m:int):TT =
+func `[]`*[TT;N,M:static int](a: MatrixSpace[TT,N,M],n:range[0..N-1],m:range[0..M-1]):TT =
   a.entries[n*M+m]
 func `[]`*[TT;N,M:static int](a: MatrixSpace[TT,N,M],n:BackwardsIndex,m:int):TT =
   a.entries[(N-n.int)*M+m]
@@ -171,6 +171,7 @@ func `-`*[TT,N,M](a: MatrixSpace[TT,N,M]):MatrixSpace[TT,N,M] =
     for i in 0..<N*M:
         result.entries[i] = -a.entries[i]
 func `*`*[TT,N,M,K](a: MatrixSpace[TT,N,M],b: MatrixSpace[TT,M,K]):MatrixSpace[TT,N,K] =
+    result = typeof(a).zero
     for n in 0..<N:
         for m in 0..<M:
             for k in 0..<K:
@@ -277,13 +278,14 @@ func `+`[V](a:AffineSpace[V], b:V):AffineSpace[V] =
 #INVERTING & SOLVING
 func rowEchelon*[TT,N,M](a: MatrixSpace[TT,N,M]):MatrixSpace[TT,N,M] =
     result = a
-    for m in 0..<M:
+    for m in 0..<min(N,M):
+        #find nonzero pivot
         var nonzeroRow = m
         while result[nonzeroRow,m] == zero(TT) and nonzeroRow < N:
             inc nonzeroRow
-        if nonzeroRow >= M:
+        if nonzeroRow >= N:
             continue
-        if nonzeroRow > m:
+        if nonzeroRow > m: #swap rows if neccesary
             for j in m..<M:
                 let temp = result[nonzeroRow,j]
                 result[nonzeroRow,j] = result[m,j]
@@ -292,6 +294,16 @@ func rowEchelon*[TT,N,M](a: MatrixSpace[TT,N,M]):MatrixSpace[TT,N,M] =
             let coeff = -result[i,m]/result[m,m]
             for j in m..<M:
                 result[i,j] = result[i,j] + coeff * result[m,j]
+
+func eliminate[TT,N,M](a: MatrixSpace[TT,N,M]):MatrixSpace[TT,N,M] =
+    result = rowEchelon a
+    if result[N-1,N-1] == TT.zero:
+        raiseInvertError(a)
+    for m in countdown(N-1,0):
+        for i in countdown(M-1,m):
+            result[m,i] = result[m,i] / result[m,m]
+            for j in 0..<m:
+                result[j,i] = result[j,i] - result[j,m] * result[m,i]
 
 func rankAtLeast*[TT,N,M](a: MatrixSpace[TT,N,M], bound:int):bool =
     var a = a
@@ -345,7 +357,10 @@ func isInvertible*[TT,N,M](a: MatrixSpace[TT,N,M]):bool =
     a.isRegular
 
 func inv*[TT,N](a: MatrixSpace[TT,N,N]):MatrixSpace[TT,N,N] =
-    discard #TODO
+    #TODO make this more efficient
+    var blo = a || typeof(a).one
+    blo = eliminate blo
+    return blo[0..<N,N..<(2*N)]
 
 func `/`*[TT,N,M,K](a: MatrixSpace[TT,N,M],b: MatrixSpace[TT,M,K]):MatrixSpace[TT,N,K] =
     a * b.inv

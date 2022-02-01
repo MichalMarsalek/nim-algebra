@@ -181,7 +181,7 @@ when isMainModule:
         let m = QQ.mat(111,2,3,44,5,6,7,88,9)
         echo m
         echo m.rowEchelon
-        #echo m.entries
+        echo m.inv * m
         dump m[^1,2]
         dump m[1..2,0..1]
         echo m || QQ.vec(10,20,30).T
