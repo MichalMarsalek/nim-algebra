@@ -3,3 +3,4 @@
 conway_polys.py
 bigints.nim
 bigints/private/literals.nim
+test.nim

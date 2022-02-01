@@ -20,31 +20,86 @@ func `$`*[TT, N, M](R:typedesc[MatrixSpace[TT, N, M]]):string =
         $TT & "^(" & $N & ", " & $M & ")"
 
 
-#INDEXING
+#INDEXING & CONCATENATING
+# 1st row, then 2nd row etc.
 func `[]=`*[TT;N,M:static int](a: var MatrixSpace[TT,N,M],n,m:int,val:TT) =
-  a.entries[n+m*N] = val
+  a.entries[n*M+m] = val
+func `[]=`*[TT;N,M:static int](a: var MatrixSpace[TT,N,M],n:BackwardsIndex,m:int,val:TT) =
+  a.entries[(N-n.int)*M+m] = val
+func `[]=`*[TT;N,M:static int](a: var MatrixSpace[TT,N,M],n:int,m:BackwardsIndex,val:TT) =
+  a.entries[n*M+M-m.int] = val
+func `[]=`*[TT;N,M:static int](a: var MatrixSpace[TT,N,M],n,m:BackwardsIndex,val:TT) =
+  a.entries[N*M-n.int*M-m.int] = val
 
-func `[]`*[TT;N,M:static int](a:MatrixSpace[TT,N,M],n,m:int):TT =
-  a.entries[n+m*N]
+func `[]`*[TT;N,M:static int](a: MatrixSpace[TT,N,M],n,m:int):TT =
+  a.entries[n*M+m]
+func `[]`*[TT;N,M:static int](a: MatrixSpace[TT,N,M],n:BackwardsIndex,m:int):TT =
+  a.entries[(N-n.int)*M+m]
+func `[]`*[TT;N,M:static int](a: MatrixSpace[TT,N,M],n:int,m:BackwardsIndex):TT =
+  a.entries[n*M+M-m.int]
+func `[]`*[TT;N,M:static int](a: MatrixSpace[TT,N,M],n,m:BackwardsIndex):TT =
+  a.entries[N*M-n.int*M-m.int]
 
-func rows*[TT;N,M:static int](a: var MatrixSpace[TT,N,M],n:int):RowVectorSpace[TT,M] =
-  for m in 0..<M:
-    result.entries[m] = a.entries[n+m*N]
-func cols*[TT;N,M:static int](a: var MatrixSpace[TT,N,M],m:int):ColVectorSpace[TT,N] =
-  for n in 0..<N:
-    result.entries[n] = a.entries[n+m*N]
+func `[]`*[TT;N,M:static int](a: MatrixSpace[TT,N,M],n,m:static HSlice):auto =
+  #TODO make this work with backwards indeces
+  const na = when n.a is int: n.a else: N-n.a.int
+  const nb = when n.b is int: n.b else: N-n.b.int
+  const ma = when m.a is int: m.a else: M-m.a.int
+  const mb = when m.b is int: m.b else: M-m.b.int
+  const newN = nb - na + 1
+  const newM = mb - ma + 1
+  static:
+      assert newN > 0
+      assert newM > 0
+  var res: MatrixSpace[TT, newN, newM]
+  for i in 0..<newN:
+    for j in 0..<newM:
+        res[i,j] = a[i+na,j+ma]
+  return res
+
+func `||`*[TT;N,M1,M2:static int](a: MatrixSpace[TT,N,M1], b: MatrixSpace[TT,N,M2]): MatrixSpace[TT,N,M1+M2] =
+    for i in 0..<N:
+        for j in 0..<M1:
+            result[i,j] = a[i,j]
+        for j in 0..<M2:
+            result[i,M1+j] = b[i,j]
+
+func `&&`*[TT;N1,N2,M:static int](a: MatrixSpace[TT,N1,M], b: MatrixSpace[TT,N2,M]): MatrixSpace[TT,N1+N2,M] =
+    for j in 0..<M:
+        for i in 0..<N1:
+            result[i,j] = a[i,j]
+        for i in 0..<N2:
+            result[N1+i,j] = b[i,j]
+
 
 #PRINTING
-func toString*[TT;N,M:static int](a:MatrixSpace[TT,N,M], line1Offset = 0): string =
+func toString_0*[TT;N,M:static int](a:MatrixSpace[TT,N,M], line1Offset = 0): string =
+    #wtf is happening here it returns totally random stuff
     when M == 1:
         return $a.T & "^T"
     var maxLengths = toSeq(0..<M).map(m => toSeq(0..<N).map(n => ($a[n,m]).len).max)
+    dump maxLengths
     map(toSeq(0..<N),
         n => " ".repeat(if n > 0: line1Offset else: 0) & "[" &
              map(toSeq(0..<M),
                  m => ($a[n,m]).align(maxLengths[m])
              ).join(spaces(max(1,maxLengths.max div 5))) & "]"
     ).join "\n"
+func toString*[TT;N,M:static int](a:MatrixSpace[TT,N,M], line1Offset = 0): string =
+    var maxLengths: array[M,int]
+    for m in 0..<M:
+        for n in 0..<N:
+            maxLengths[m] = max(maxLengths[m], ($a[n,m]).len)
+    for n in 0..<N:
+        if n > 0:
+            result &= spaces(line1Offset)
+        result &= "["
+        for m in 0..<M:
+            result &= ($a[n,m]).align(maxLengths[m])
+            if m < M-1:
+                result &= spaces(max(1,maxLengths.max div 5))
+        result &= "]"
+        result &= "\n"
     
 func `$`*[TT;N,M:static int](a:MatrixSpace[TT,N,M]):string =
   a.toString
@@ -305,7 +360,7 @@ func ker*[TT,N,M](a: MatrixSpace[TT,N,M]):AffineSpace[RowVectorSpace[TT,M]] =
 macro vec*(data:varargs[typed]):untyped =
   result = nnkObjConstr.newTree(
     nnkBracketExpr.newTree(
-      newIdentNode("ColVectorSpace"),
+      newIdentNode("RowVectorSpace"),
       nnkCall.newTree(
         newIdentNode("typeof"),
         data[0]
@@ -333,7 +388,7 @@ macro vec*(data:varargs[typed]):untyped =
 macro vec*(T:typedesc,data:varargs[typed]):untyped =
   result = nnkObjConstr.newTree(
     nnkBracketExpr.newTree(
-      newIdentNode("ColVectorSpace"),
+      newIdentNode("RowVectorSpace"),
       T,
       newLit(data.len)
     ),

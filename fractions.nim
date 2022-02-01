@@ -23,7 +23,7 @@ template `///`*[T](_,x:typedesc):typedesc = #TODO this doesn't work
 ]#
 
 template fractionField*(T: typedesc):typedesc =
-    macro internal: typedesc =
+    macro internal: typedesc {.gensym.}=
         if T is int:
             return nnkBracketExpr.newTree(
                 newIdentNode("Fractions"),

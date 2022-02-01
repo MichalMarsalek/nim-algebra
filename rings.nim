@@ -147,13 +147,9 @@ func `/`*[T:Ring](a,b:T):typeof(a) =
 func `div`*[T:Ring](a,b:T):typeof(a) =
     a * b.inv
 
-func `//`*[T:Ring](a,b:T):Fractions[T] = #TODO temp
-    #type FR = fractionField(typeof(a))
-    #type FR = Fractions[typeof(a)] #TODO temporary
-    #echo FR
-    #a.embed(FR) / b.embed(FR)
-    result = initFrac(a,b)
-    reduce result
+func `//`*[T:Ring](a,b:T):fractionField(T) =
+    type FR = fractionField(T)
+    a.embed(FR) / b.embed(FR)
     
 
 when isMainModule:
@@ -175,9 +171,21 @@ when isMainModule:
         var a = 2 + I(6)
         a *= 2 + I(6)
         echo a
-    when true:
+    when false:
         echo QQ.mat(1,2,
                     3,4).charpoly
+    when false:
+        echo typeof(ZZ/5)
+        echo typeof(ZZ/I(5))
+    when true:
+        let m = QQ.mat(111,2,3,44,5,6,7,88,9)
+        echo m
+        echo m.rowEchelon
+        #echo m.entries
+        dump m[^1,2]
+        dump m[1..2,0..1]
+        echo m || QQ.vec(10,20,30).T
+        echo m && QQ.vec(10,20,30)
     #[
     let m = ((ZZ/10)^(3,3)).random
     dump m

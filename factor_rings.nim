@@ -6,29 +6,35 @@ type FactorRing*[TT;M:static TT] = object
     val:TT
 func `$`*[TT,M](R:typedesc[FactorRing[TT,M]]):string =
     $TT & "/(" & $M & ")"
-
 func zero*[TT,M](R:typedesc[FactorRing[TT,M]]):R =
     R(val: TT.zero)
 func one*[TT,M](R:typedesc[FactorRing[TT,M]]):R =
     R(val: TT.one)
 
+#Ideals
+#TODO convert small ZZ gens to ints implicitly
 type Ideal*[P] = object
     generator*: P
-
 func I*[P](p:P):Ideal[P] =
     result.generator = p
 func `*`*[P](p:P, _:typedesc[P]):Ideal[P] =
     I(p)
-template `/`*(T:typedesc,p:T):typedesc =
-    FactorRing[T,p]
 template `/`*(T:typedesc,p:Ideal[T]):typedesc =
     FactorRing[T,p.generator]
+template `/`*(T:typedesc,p:T):typedesc =
+    FactorRing[T,p]
+template `/`*(T:typedesc[ZZ],p:Ideal[int]):typedesc =
+    FactorRing[int,p.generator]
+template `/`*(T:typedesc[ZZ],p:range[0..2147483647]):typedesc =
+    FactorRing[int,p]
 func `$`*(p:Ideal):string =
     "I(" & $p.generator & ")"
 
-func `+`*[TT](poly:TT, M:static[Ideal[TT]]):auto =
-    FactorRing[TT,M.generator](val: poly)
+#value + ideal -> [value]
+func `+`*[TT](p:TT, M:static[Ideal[TT]]):auto =
+    FactorRing[TT,M.generator](val: p)
 
+#ops in R/I
 func `+`*[TT, M](f,g:FactorRing[TT,M]):FactorRing[TT, M] =
     result.val = (f.val + g.val) mod M
 func `-`*[TT, M](f,g:FactorRing[TT,M]):FactorRing[TT, M] =
